@@ -52,4 +52,4 @@ This will compile the module, run tests, and install the JAR file into your loca
 
 ## License
 
-This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details.
+Aspectran is released under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
