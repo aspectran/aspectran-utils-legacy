@@ -778,7 +778,7 @@ public abstract class StringUtils {
     }
 
     /**
-     * Converts a byte size into a human-friendly format (e.g., 1024 -> "1.0 KB").
+     * Converts a byte size into a human-friendly format (e.g., 1024 -&gt; "1.0 KB").
      * @param bytes the number of bytes
      * @return a human-friendly byte size string (includes units like B, KB, MB, GB)
      */
