@@ -15,7 +15,6 @@
  */
 package com.aspectran.utils.security;
 
-
 /**
  * Thrown when a password-based token is found to be invalid.
  * <p>This could happen if the token is malformed, has been tampered with,

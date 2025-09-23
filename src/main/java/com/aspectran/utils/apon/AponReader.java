@@ -28,7 +28,23 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 
-import static com.aspectran.utils.apon.AponFormat.*;
+import static com.aspectran.utils.apon.AponFormat.COMMENT_LINE_START;
+import static com.aspectran.utils.apon.AponFormat.CURLY_BRACKET_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.CURLY_BRACKET_OPEN;
+import static com.aspectran.utils.apon.AponFormat.DOUBLE_QUOTE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.ESCAPE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.FALSE;
+import static com.aspectran.utils.apon.AponFormat.NAME_VALUE_SEPARATOR;
+import static com.aspectran.utils.apon.AponFormat.NO_CONTROL_CHAR;
+import static com.aspectran.utils.apon.AponFormat.NULL;
+import static com.aspectran.utils.apon.AponFormat.ROUND_BRACKET_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.ROUND_BRACKET_OPEN;
+import static com.aspectran.utils.apon.AponFormat.SINGLE_QUOTE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.SQUARE_BRACKET_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.SQUARE_BRACKET_OPEN;
+import static com.aspectran.utils.apon.AponFormat.SYSTEM_NEW_LINE;
+import static com.aspectran.utils.apon.AponFormat.TEXT_LINE_START;
+import static com.aspectran.utils.apon.AponFormat.TRUE;
 
 /**
  * A streaming reader that parses APON (Aspectran Parameters Object Notation) text

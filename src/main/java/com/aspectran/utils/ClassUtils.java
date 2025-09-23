@@ -322,7 +322,8 @@ public abstract class ClassUtils {
     @NonNull
     public static String getShortName(Class<?> clazz) {
         Assert.notNull(clazz, "Class must not be null");
-        return getShortName(clazz.getTypeName());
+        // Use getName() for JDK 1.6 compatibility (getTypeName() is JDK 1.8+)
+        return getShortName(clazz.getName());
     }
 
 }

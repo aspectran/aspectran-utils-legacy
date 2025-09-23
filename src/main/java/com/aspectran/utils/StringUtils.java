@@ -652,7 +652,7 @@ public abstract class StringUtils {
      * @return the joined {@code String}
      */
     public static String joinWithLines(Object[] arr) {
-        return join(arr, System.lineSeparator());
+        return join(arr, SystemUtils.LINE_SEPARATOR);
     }
 
     /**
@@ -661,7 +661,7 @@ public abstract class StringUtils {
      * @return the joined {@code String}
      */
     public static String joinWithLines(Collection<?> collection) {
-        return join(collection, System.lineSeparator());
+        return join(collection, SystemUtils.LINE_SEPARATOR);
     }
 
     /**

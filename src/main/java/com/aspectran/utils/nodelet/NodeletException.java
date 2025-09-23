@@ -17,7 +17,6 @@ package com.aspectran.utils.nodelet;
 
 import org.xml.sax.SAXException;
 
-
 /**
  * Exception thrown when an error occurs during Nodelet processing.
  * <p>This exception typically indicates issues encountered while parsing

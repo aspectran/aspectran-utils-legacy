@@ -29,7 +29,25 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.List;
 
-import static com.aspectran.utils.apon.AponFormat.*;
+import static com.aspectran.utils.apon.AponFormat.COMMENT_LINE_START;
+import static com.aspectran.utils.apon.AponFormat.CURLY_BRACKET_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.CURLY_BRACKET_OPEN;
+import static com.aspectran.utils.apon.AponFormat.DEFAULT_INDENT_STRING;
+import static com.aspectran.utils.apon.AponFormat.DOUBLE_QUOTE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.ESCAPE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.NAME_VALUE_SEPARATOR;
+import static com.aspectran.utils.apon.AponFormat.NEW_LINE;
+import static com.aspectran.utils.apon.AponFormat.NEW_LINE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.NULL;
+import static com.aspectran.utils.apon.AponFormat.ROUND_BRACKET_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.ROUND_BRACKET_OPEN;
+import static com.aspectran.utils.apon.AponFormat.SINGLE_QUOTE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.SPACE;
+import static com.aspectran.utils.apon.AponFormat.SPACE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.SQUARE_BRACKET_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.SQUARE_BRACKET_OPEN;
+import static com.aspectran.utils.apon.AponFormat.SYSTEM_NEW_LINE;
+import static com.aspectran.utils.apon.AponFormat.TEXT_LINE_START;
 
 /**
  * A streaming writer that serializes {@link Parameters} into APON (Aspectran Parameters

@@ -23,8 +23,7 @@ import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 import org.jasypt.iv.RandomIvGenerator;
 
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import java.util.Arrays;
 
 /**
  * This class provides basic encryption/decryption capabilities to implement PBE.
@@ -72,9 +71,9 @@ public abstract class PBEncryptionUtils {
      */
     public static final String ENCRYPTION_PASSWORD_KEY = "aspectran.encryption.password";
 
-    private static final Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
+    private static final Charset MESSAGE_CHARSET = Charset.forName("UTF-8");
 
-    private static final Charset ENCRYPTED_MESSAGE_CHARSET = StandardCharsets.US_ASCII;
+    private static final Charset ENCRYPTED_MESSAGE_CHARSET = Charset.forName("US-ASCII");
 
     private static final String algorithm;
 
@@ -240,15 +239,78 @@ public abstract class PBEncryptionUtils {
             return new String(decrypted, MESSAGE_CHARSET);
         }
 
-        private byte[] encode(byte[] inputBytes) {
-            return Base64.getUrlEncoder()
-                    .withoutPadding()
-                    .encode(inputBytes);
+        private static final char[] TO_BASE64_URL =
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".toCharArray();
+
+        private static final int[] FROM_BASE64_URL = new int[256];
+        static {
+            for (int i = 0; i < FROM_BASE64_URL.length; i++) {
+                FROM_BASE64_URL[i] = -1;
+            }
+            for (int i = 0; i < TO_BASE64_URL.length; i++) {
+                FROM_BASE64_URL[TO_BASE64_URL[i]] = i;
+            }
         }
 
-        private byte[] decode(byte[] inputBytes) {
-            return Base64.getUrlDecoder()
-                    .decode(inputBytes);
+        private byte[] encode(byte[] src) {
+            int len = src.length;
+            StringBuilder sb = new StringBuilder((len * 4 + 2) / 3);
+            int i = 0;
+            while (i + 3 <= len) {
+                int b0 = src[i++] & 0xff;
+                int b1 = src[i++] & 0xff;
+                int b2 = src[i++] & 0xff;
+                sb.append(TO_BASE64_URL[b0 >>> 2]);
+                sb.append(TO_BASE64_URL[((b0 & 0x3) << 4) | (b1 >>> 4)]);
+                sb.append(TO_BASE64_URL[((b1 & 0xf) << 2) | (b2 >>> 6)]);
+                sb.append(TO_BASE64_URL[b2 & 0x3f]);
+            }
+            int rem = len - i;
+            if (rem == 1) {
+                int b0 = src[i] & 0xff;
+                sb.append(TO_BASE64_URL[b0 >>> 2]);
+                sb.append(TO_BASE64_URL[(b0 & 0x3) << 4]);
+                // no padding, omit the last two chars
+            } else if (rem == 2) {
+                int b0 = src[i++] & 0xff;
+                int b1 = src[i] & 0xff;
+                sb.append(TO_BASE64_URL[b0 >>> 2]);
+                sb.append(TO_BASE64_URL[((b0 & 0x3) << 4) | (b1 >>> 4)]);
+                sb.append(TO_BASE64_URL[(b1 & 0xf) << 2]);
+                // no padding, omit the last char
+            }
+            return sb.toString().getBytes(ENCRYPTED_MESSAGE_CHARSET);
+        }
+
+        private byte[] decode(byte[] src) {
+            int len = src.length;
+            // Allocate a buffer slightly larger than needed; we'll trim it at the end
+            byte[] out = new byte[(len * 3) / 4 + 3];
+            int outPos = 0;
+            int[] q = new int[4];
+            int qi = 0;
+            for (int i = 0; i < len; i++) {
+                int ch = src[i] & 0xff;
+                int val = (ch < 256) ? FROM_BASE64_URL[ch] : -1;
+                if (val < 0) {
+                    // skip non-base64 characters (shouldn't appear)
+                    continue;
+                }
+                q[qi++] = val;
+                if (qi == 4) {
+                    out[outPos++] = (byte)((q[0] << 2) | (q[1] >>> 4));
+                    out[outPos++] = (byte)(((q[1] & 0xf) << 4) | (q[2] >>> 2));
+                    out[outPos++] = (byte)(((q[2] & 0x3) << 6) | q[3]);
+                    qi = 0;
+                }
+            }
+            if (qi == 2) {
+                out[outPos++] = (byte)((q[0] << 2) | (q[1] >>> 4));
+            } else if (qi == 3) {
+                out[outPos++] = (byte)((q[0] << 2) | (q[1] >>> 4));
+                out[outPos++] = (byte)(((q[1] & 0xf) << 4) | (q[2] >>> 2));
+            }
+            return Arrays.copyOf(out, outPos);
         }
 
     }

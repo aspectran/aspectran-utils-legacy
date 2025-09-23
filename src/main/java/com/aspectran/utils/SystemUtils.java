@@ -34,6 +34,9 @@ public abstract class SystemUtils {
 
     private static final String USER_DIR_PROPERTY = "user.dir";
 
+    /** System-dependent line separator (JDK 1.6 compatible). */
+    public static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
     /**
      * Gets a system property, returning {@code null} if the property cannot be read.
      * If a {@link SecurityException} is caught, the return value is {@code null}

@@ -115,7 +115,7 @@ public class ArrayParameters extends AbstractParameters implements Iterable<Para
         if (list != null) {
             return list.iterator();
         } else {
-            return Collections.emptyIterator();
+            return Collections.<Parameters>emptyList().iterator();
         }
     }
 

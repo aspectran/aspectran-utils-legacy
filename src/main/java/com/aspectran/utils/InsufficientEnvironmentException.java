@@ -75,12 +75,12 @@ public class InsufficientEnvironmentException extends IllegalStateException {
         String hr = String.format("-%" + maxLen + "s-", "").replaceAll(" ", "-");
         StringBuilder sb = new StringBuilder();
         sb.append(hr);
-        sb.append(System.lineSeparator());
+        sb.append(SystemUtils.LINE_SEPARATOR);
         sb.append(String.format(" %-" + maxLen + "s ", "Insufficient Environment for Aspectran"));
-        sb.append(System.lineSeparator());
+        sb.append(SystemUtils.LINE_SEPARATOR);
         for (String line : lines) {
             sb.append(String.format(" %-" + maxLen + "s ", line));
-            sb.append(System.lineSeparator());
+            sb.append(SystemUtils.LINE_SEPARATOR);
         }
         sb.append(hr);
         return sb.toString();

@@ -15,6 +15,8 @@
  */
 package com.aspectran.utils.apon;
 
+import com.aspectran.utils.SystemUtils;
+
 /**
  * Common constants and symbols used by the APON (Aspectran Parameters Object Notation)
  * reader/writer implementations.
@@ -73,7 +75,7 @@ public abstract class AponFormat {
     public static final String NEW_LINE = "\n";
 
     /** System-dependent newline sequence. */
-    public static final String SYSTEM_NEW_LINE = System.lineSeparator();
+    public static final String SYSTEM_NEW_LINE = SystemUtils.LINE_SEPARATOR;
 
     /** Default indentation string used when pretty-printing. */
     protected static final String DEFAULT_INDENT_STRING = "  ";
