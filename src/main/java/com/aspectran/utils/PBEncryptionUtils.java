@@ -31,7 +31,7 @@ import java.util.Base64;
  * The encryption algorithm and password can be configured via JVM system properties.
  * These properties are read only once when the class is loaded.
  *
- * <p>Note: Use {@link org.jasypt.util.password.StrongPasswordEncryptor} for
+ * <p>Note: Use {@code org.jasypt.util.password.StrongPasswordEncryptor} for
  * high-strength password digesting and checking.</p>
  *
  * <p>Created: 20/10/2018</p>
