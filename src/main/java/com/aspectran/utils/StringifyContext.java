@@ -256,7 +256,12 @@ public class StringifyContext implements Cloneable {
      */
     public String toString(Date date, String format) {
         Assert.notNull(date, "date must not be null");
-        return date.toString();
+        SimpleDateFormat sdf = touchSimpleDateFormat(format);
+        if (sdf != null) {
+            return sdf.format(date);
+        } else {
+            return date.toString();
+        }
     }
 
     /**
