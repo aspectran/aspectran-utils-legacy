@@ -1,5 +1,10 @@
 # Aspectran Utilities (Legacy Compatibility)
 
+[![Build Status](https://github.com/aspectran/aspectran-utils-legacy/workflows/Java%20CI/badge.svg)](https://github.com/aspectran/aspectran-utils-legacy/actions?query=workflow%3A%22Java+CI%22)
+[![Maven Central Version](https://img.shields.io/maven-central/v/com.aspectran/aspectran-utils-legacy)](https://central.sonatype.com/artifact/com.aspectran/aspectran-utils-legacy)
+[![javadoc](https://javadoc.io/badge2/com.aspectran/aspectran-utils-legacy/javadoc.svg)](https://javadoc.io/doc/com.aspectran/aspectran-utils-legacy)
+[![License](https://img.shields.io/:license-apache-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
+
 The `aspectran-utils-legacy` module provides a collection of miscellaneous utility classes designed to support API calls and response handling between legacy systems (JDK 1.6 to JDK 17) and modern Aspectran application servers (JDK 21+). It acts as a compatibility layer, enabling seamless integration without requiring extensive modifications to existing legacy codebases.
 
 ## Features
