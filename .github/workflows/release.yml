@@ -59,9 +59,8 @@ jobs:
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
-          GPG_KEY_ID: ${{ steps.import_gpg.outputs.key_id }}
         run: |
-          ./mvnw -B deploy -P release -s .mvn/settings.xml -Dgpg.keyname=${GPG_KEY_ID}
+          ./mvnw -B deploy -P release -s .mvn/settings.xml
 
       - name: Post release
         env:
