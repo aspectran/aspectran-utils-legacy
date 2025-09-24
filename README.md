@@ -35,7 +35,7 @@ To use `aspectran-utils-legacy` in your project, add the appropriate dependency 
 ### Gradle
 
 ```gradle
-implementation 'com.aspectran:aspectran-utils-legacy:1.0.0-SNAPSHOT' // Use the actual version
+implementation 'com.aspectran:aspectran-utils-legacy:1.0.0' // Use the actual version
 ```
 
 For detailed usage examples and environment configuration, please refer to the [Legacy Integration Guide](docs/practical-guide-to-legacy-integration_en.md).
