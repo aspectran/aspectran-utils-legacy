@@ -52,7 +52,7 @@ jobs:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
         run: |
-          ./mvnw -B deploy -P release -s .mvn/settings.xml -Dgpg.passphrase='${{ secrets.GPG_PASSPHRASE }}
+          ./mvnw -B deploy -P release -s .mvn/settings.xml -Dgpg.passphrase='${{ secrets.GPG_PASSPHRASE }}'
 
       - name: Post release
         env:
