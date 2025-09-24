@@ -24,8 +24,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -37,7 +37,7 @@ public class ToStringBuilderTest {
 
     @Test
     public void testMap() {
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new LinkedHashMap<String, String>();
         map.put("key1", "value1");
         map.put("key2", "value2");
 
@@ -67,7 +67,7 @@ public class ToStringBuilderTest {
 
     @Test
     public void testToStringBuilder() {
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new LinkedHashMap<String, String>();
         map.put("key1", "value1");
         map.put("key2", "value2");
 
@@ -97,7 +97,7 @@ public class ToStringBuilderTest {
 
     @Test
     public void testCircularReference() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new LinkedHashMap<String, Object>();
         map.put("key1", "value1");
         map.put("key2", map);
 
@@ -117,7 +117,7 @@ public class ToStringBuilderTest {
         SimpleDateFormat formatter = new SimpleDateFormat(stringifyContext.getDateTimeFormat(), Locale.ENGLISH);
         Date date1 = formatter.parse("2024-12-01 10:39:24");
 
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new LinkedHashMap<String, Object>();
         map.put("key1", date1);
 
         String result = ToStringBuilder.toString("Variable", map, stringifyContext);
@@ -126,7 +126,7 @@ public class ToStringBuilderTest {
 
     @Test
     public void testVariable() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new LinkedHashMap<String, Object>();
         map.put("key1", "value1");
         map.put("key2", "value2");
 
@@ -144,7 +144,7 @@ public class ToStringBuilderTest {
         Vector<String> list = new Vector<String>();
         list.add("value1");
         list.add("value2");
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new LinkedHashMap<String, Object>();
         map.put("key1", "value1");
         map.put("key2", "value2");
         Iterator<String> iterator = list.iterator();

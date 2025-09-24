@@ -28,6 +28,7 @@ public class PBEncryptionUtilsTest {
     @BeforeClass
     public static void passwordSetting() {
         // System default
+        System.setProperty(PBEncryptionUtils.DEFAULT_ALGORITHM, "PBEWithMD5AndTripleDES");
         System.setProperty(PBEncryptionUtils.ENCRYPTION_PASSWORD_KEY, "encryption-password-for-test");
     }
 

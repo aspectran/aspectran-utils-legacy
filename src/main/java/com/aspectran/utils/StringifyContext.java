@@ -20,14 +20,13 @@ import com.aspectran.utils.annotation.jsr305.Nullable;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
 
 /**
  * A context that holds options and helpers for converting values to and from strings.
  * <p>This class encapsulates formatting settings such as pretty-printing, indentation,
- * null handling, date/time formats, and {@link Locale}. It provides a consistent
+ * null handling, date/time formats, and {@code Locale}. It provides a consistent
  * way to manage serialization and deserialization options across different components.</p>
  *
  * <p>Created: 2024. 11. 30.</p>
@@ -173,7 +172,6 @@ public class StringifyContext implements Cloneable {
 
     /**
      * Sets the format string for date-time values.
-     * This will reset any previously set {@link DateTimeFormatter}.
      * @param dateTimeFormat the date-time format string
      */
     public void setDateTimeFormat(String dateTimeFormat) {
@@ -190,7 +188,6 @@ public class StringifyContext implements Cloneable {
 
     /**
      * Sets the format string for date values.
-     * This will reset any previously set {@link DateTimeFormatter}.
      * @param dateFormat the date format string
      */
     public void setDateFormat(String dateFormat) {
@@ -207,7 +204,6 @@ public class StringifyContext implements Cloneable {
 
     /**
      * Sets the format string for time values.
-     * This will reset any previously set {@link DateTimeFormatter}.
      * @param timeFormat the time format string
      */
     public void setTimeFormat(String timeFormat) {

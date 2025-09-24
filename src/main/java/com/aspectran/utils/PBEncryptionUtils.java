@@ -40,7 +40,7 @@ import java.util.Arrays;
 public abstract class PBEncryptionUtils {
 
     /**
-     * The default encryption algorithm is "PBEWITHHMACSHA256ANDAES_128".
+     * The default encryption algorithm is "PBEWithMD5AndTripleDES".
      * This is a modern and secure password-based encryption algorithm recommended by security experts.
      * <p><strong>NOTE ON ENCRYPTED LENGTH:</strong> Modern algorithms like this one produce
      * longer encrypted strings compared to older ones (e.g., "PBEWithMD5AndTripleDES").
@@ -59,7 +59,7 @@ public abstract class PBEncryptionUtils {
      * will significantly reduce the security level.
      * @see <a href="https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html#pbecipher-algorithms">Java Security Standard Algorithm Names</a>
      */
-    public static final String DEFAULT_ALGORITHM = "PBEWITHHMACSHA256ANDAES_128";
+    public static final String DEFAULT_ALGORITHM = "PBEWithMD5AndTripleDES";
 
     /**
      * The name of the system property that specifies the encryption algorithm.
