@@ -250,7 +250,17 @@ public class JsonWriter {
         } else if (object instanceof String) {
             writeString((String)object);
         } else if (object instanceof JsonString) {
-            writeJson(object.toString());
+            String json = object.toString();
+            if (json != null) {
+                try {
+                    Object parsed = JsonParser.parse(json);
+                    writeValue(parsed);
+                } catch (IOException e) {
+                    throw new IOException("Failed to re-parse JsonString", e);
+                }
+            } else {
+                writeNull();
+            }
         } else if (object instanceof Character) {
             writeString(String.valueOf(object));
         } else if (object instanceof Boolean) {
