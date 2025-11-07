@@ -22,6 +22,8 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * Test cases for AponWriter.
+ *
  * <p>Created: 2020/05/29</p>
  */
 public class AponWriterTest {

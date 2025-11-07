@@ -31,6 +31,8 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * Test cases for converting Java Objects to APON Parameters.
+ *
  * <p>Created: 2019-07-07</p>
  */
 public class ObjectToParametersTest {

@@ -21,6 +21,11 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 
+/**
+ * Test cases for AponLines.
+ *
+ * <p>Created: 2019. 12. 7.</p>
+ */
 public class AponLinesTest {
 
     @Test

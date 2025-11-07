@@ -20,6 +20,7 @@ import com.aspectran.utils.ClassUtils;
 import com.aspectran.utils.annotation.jsr305.NonNull;
 import com.aspectran.utils.json.JsonReader;
 import com.aspectran.utils.json.JsonReaderCloseable;
+import com.aspectran.utils.json.MalformedJsonException;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -110,7 +111,7 @@ public class JsonToParameters {
         String name = (container instanceof ArrayParameters ? ArrayParameters.NONAME : null);
         JsonReaderCloseable jsonReader = new JsonReaderCloseable(reader);
         try {
-            read(jsonReader, container, name);
+            read(jsonReader, container, name, false);
         } catch (Exception e) {
             throw new IOException("Failed to convert JSON to APON", e);
         } finally {
@@ -131,51 +132,79 @@ public class JsonToParameters {
         return (T)container;
     }
 
-    private void read(@NonNull JsonReader reader, Parameters container, String name) throws IOException {
+    private void read(@NonNull JsonReader reader, Parameters container, String name, boolean array) throws IOException {
         switch (reader.peek()) {
             case BEGIN_OBJECT:
                 reader.beginObject();
                 if (name != null) {
-                    container = container.newParameters(name);
+                    Parameters parameters = container.newParameters(name);
+                    if (array) {
+                        Parameter parameter = container.getParameter(name);
+                        if (!parameter.isArray()) {
+                            parameter.arraylize();
+                        }
+                    }
+                    container = parameters;
                 }
                 while (reader.hasNext()) {
-                    read(reader, container, reader.nextName());
+                    read(reader, container, reader.nextName(), false);
                 }
                 reader.endObject();
                 return;
             case BEGIN_ARRAY:
                 reader.beginArray();
-                while (reader.hasNext()) {
-                    read(reader, container, name);
+                if (reader.hasNext()) {
+                    do {
+                        read(reader, container, name, !container.isStructureFixed());
+                    } while (reader.hasNext());
+                } else {
+                    container.newParameterValue(name, ValueType.VARIABLE, true);
                 }
                 reader.endArray();
                 return;
             case STRING:
-                container.putValue(name, reader.nextString());
+                Parameter parameter = container.getParameter(name);
+                if (parameter == null) {
+                    parameter = container.newParameterValue(name, ValueType.STRING, array);
+                }
+                parameter.putValue(reader.nextString());
                 return;
             case BOOLEAN:
-                container.putValue(name, reader.nextBoolean());
+                touchParameter(container, name, ValueType.BOOLEAN, array).putValue(reader.nextBoolean());
                 return;
             case NUMBER:
+                ValueType valueType;
+                Object number;
                 try {
-                    container.putValue(name, reader.nextInt());
+                    number = reader.nextInt();
+                    valueType = ValueType.INT;
                 } catch (NumberFormatException e0) {
                     try {
-                        container.putValue(name, reader.nextLong());
+                        number = reader.nextLong();
+                        valueType = ValueType.LONG;
                     } catch (NumberFormatException e1) {
-                        container.putValue(name, reader.nextDouble());
+                        number = reader.nextDouble();
+                        valueType = ValueType.DOUBLE;
                     }
                 }
+                touchParameter(container, name, valueType, array).putValue(number);
                 return;
             case NULL:
                 reader.nextNull();
-                Parameter parameter = container.getParameter(name);
-                if (parameter == null || parameter.getValueType() != ValueType.PARAMETERS) {
-                    container.putValue(name, null);
-                }
+                touchParameter(container, name, ValueType.VARIABLE, array).putValue(null);
                 return;
             default:
-                throw new IllegalStateException();
+                throw new MalformedJsonException("Unexpected token: " + reader.peek());
+        }
+    }
+
+    @NonNull
+    private Parameter touchParameter(@NonNull Parameters container, String name, ValueType valueType, boolean array) {
+        Parameter parameter = container.getParameter(name);
+        if (parameter != null) {
+            return parameter;
+        } else {
+            return container.newParameterValue(name, valueType, array);
         }
     }
 

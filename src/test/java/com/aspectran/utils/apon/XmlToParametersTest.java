@@ -23,6 +23,8 @@ import java.text.ParseException;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * Test cases for converting XML to APON Parameters.
+ *
  * <p>Created: 2019-07-08</p>
  */
 public class XmlToParametersTest {

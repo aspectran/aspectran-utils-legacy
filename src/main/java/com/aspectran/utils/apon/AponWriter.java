@@ -250,15 +250,25 @@ public class AponWriter implements Flushable {
     public <T extends AponWriter> T write(Parameters parameters) throws IOException {
         Assert.notNull(parameters, "parameters must not be null");
         if (parameters instanceof ArrayParameters) {
-            for (Parameters ps : ((ArrayParameters)parameters).getParametersList()) {
-                beginBlock();
-                for (Parameter pv : ps.getParameterValues()) {
-                    if (nullWritable || pv.isAssigned()) {
-                        write(pv);
+            ArrayParameters arrayParameters = (ArrayParameters)parameters;
+            beginArray();
+            if (arrayParameters.getParametersList() != null) {
+                for (Parameters ps : arrayParameters.getParametersList()) {
+                    if (nullWritable || ps != null) {
+                        indent();
+                        beginBlock();
+                        if (ps != null) {
+                            for (Parameter pv : ps.getParameterValues()) {
+                                if (nullWritable || pv.isAssigned()) {
+                                    write(pv);
+                                }
+                            }
+                        }
+                        endBlock();
                     }
                 }
-                endBlock();
             }
+            endArray();
         } else {
             for (Parameter pv : parameters.getParameterValues()) {
                 if (nullWritable || pv.isAssigned()) {
@@ -286,12 +296,14 @@ public class AponWriter implements Flushable {
                         writeName(parameter);
                         beginArray();
                         for (Parameters ps : list) {
-                            indent();
-                            beginBlock();
-                            if (ps != null) {
-                                write(ps);
+                            if (nullWritable || ps != null) {
+                                indent();
+                                beginBlock();
+                                if (ps != null) {
+                                    write(ps);
+                                }
+                                endBlock();
                             }
-                            endBlock();
                         }
                         endArray();
                     } else {
@@ -711,7 +723,7 @@ public class AponWriter implements Flushable {
             return str;
         }
 
-        StringBuilder sb = new StringBuilder(len);
+        StringBuilder sb = new StringBuilder();
         char c;
         String t;
         for (int pos = 0; pos < len; pos++) {

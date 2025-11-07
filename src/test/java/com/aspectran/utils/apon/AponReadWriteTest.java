@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 
 /**
+ * Test cases for reading from and writing to APON format.
+ *
  * <p>Created: 2016. 9. 7.</p>
  */
 public class AponReadWriteTest {

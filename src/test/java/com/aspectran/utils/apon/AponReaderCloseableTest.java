@@ -19,6 +19,9 @@ import org.junit.Test;
 
 import java.io.StringReader;
 
+/**
+ * Test cases for AponReaderCloseable.
+ */
 public class AponReaderCloseableTest {
 
     @Test

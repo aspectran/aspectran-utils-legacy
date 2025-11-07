@@ -22,28 +22,29 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * Test cases for converting JSON to APON Parameters.
+ *
  * <p>Created: 2019-06-29</p>
  */
 public class JsonToParametersTest {
 
     @Test
     public void testConvertJsonToApon() throws IOException {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[\n");
-        sb.append("{\n");
-        sb.append("  \"param1\": 111,\n");
-        sb.append("  \"param2\": 222\n");
-        sb.append("}\n");
-        sb.append(",\n");
-        sb.append("{\n");
-        sb.append("  \"param3\": 333,\n");
-        sb.append("  \"param4\": 444\n");
-        sb.append("}\n, null");
-        sb.append("]\n");
+        String sb = "[\n" +
+                "{\n" +
+                "  \"param1\": 111,\n" +
+                "  \"param2\": 222\n" +
+                "}\n" +
+                ",\n" +
+                "{\n" +
+                "  \"param3\": 333,\n" +
+                "  \"param4\": 444\n" +
+                "}\n, null" +
+                "]\n";
 
-        String apon = "{\n" + "  param1: 111\n" + "  param2: 222\n" + "}\n" + "{\n" + "  param3: 333\n" + "  param4: 444\n" + "}";
+        String apon = "[\n  {\n" + "    param1: 111\n" + "    param2: 222\n" + "  }\n" + "  {\n" + "    param3: 333\n" + "    param4: 444\n" + "  }\n" + "]";
 
-        Parameters ps = JsonToParameters.from(sb.toString(), ArrayParameters.class);
+        Parameters ps = JsonToParameters.from(sb, ArrayParameters.class);
 
         String s1 = apon.replace("\n", AponFormat.SYSTEM_NEW_LINE);
         String s2 = ps.toString().trim();

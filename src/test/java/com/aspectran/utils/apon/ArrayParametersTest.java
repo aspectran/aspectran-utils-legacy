@@ -20,6 +20,8 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * Test cases for ArrayParameters.
+ *
  * <p>Created: 2019-06-28</p>
  */
 public class ArrayParametersTest {

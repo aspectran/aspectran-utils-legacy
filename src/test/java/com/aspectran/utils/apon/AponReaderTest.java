@@ -20,6 +20,8 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * Test cases for AponReader.
+ *
  * <p>Created: 2020/05/30</p>
  */
 public class AponReaderTest {
