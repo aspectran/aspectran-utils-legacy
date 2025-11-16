@@ -147,6 +147,8 @@ public class WildcardPattern {
         for (int i = 0; i < tokens.length; i++) {
             if (tokens[i] == STAR_CHAR) {
                 if (esc) {
+                    types[i - 1] = SKIP_TYPE;
+                    types[i] = LITERAL_TYPE;
                     esc = false;
                 } else {
                     if (star) {
@@ -164,6 +166,7 @@ public class WildcardPattern {
             } else if (tokens[i] == QUESTION_CHAR) {
                 if (esc) {
                     types[i - 1] = SKIP_TYPE;
+                    types[i] = LITERAL_TYPE;
                     esc = false;
                 } else {
                     types[i] = QUESTION_TYPE; // type 3: question
@@ -174,6 +177,7 @@ public class WildcardPattern {
             } else if (tokens[i] == PLUS_CHAR) {
                 if (esc) {
                     types[i - 1] = SKIP_TYPE;
+                    types[i] = LITERAL_TYPE;
                     esc = false;
                 } else {
                     types[i] = PLUS_TYPE; // type 4: plus
@@ -183,14 +187,21 @@ public class WildcardPattern {
                 }
             } else if (tokens[i] == separator) {
                 // Separator character not escaped
-                esc = false;
-                types[i] = SEPARATOR_TYPE; // type 9: separator
+                if (esc) {
+                    types[i - 1] = SKIP_TYPE;
+                    types[i] = LITERAL_TYPE;
+                    esc = false;
+                } else {
+                    types[i] = SEPARATOR_TYPE; // type 9: separator
+                }
             } else if (tokens[i] == ESCAPE_CHAR) {
                 types[i] = SKIP_TYPE;
                 esc = true;
             } else {
                 if (esc) {
-                    types[i - 1] = LITERAL_TYPE;
+                    types[i - 1] = SKIP_TYPE;
+                    types[i] = LITERAL_TYPE;
+                    esc = false;
                 } else {
                     types[i] = LITERAL_TYPE;
                 }
@@ -284,8 +295,8 @@ public class WildcardPattern {
             return false;
         }
         WildcardPattern that = (WildcardPattern)other;
-        return (that.toString() == patternString) || (that.toString() != null && (that.toString()).equals(patternString)) &&
-                (that.getSeparator() == getSeparator()) || (that.getSeparator() == getSeparator());
+        return (that.toString() != null && that.toString().equals(patternString) &&
+                that.getSeparator() == getSeparator());
     }
 
     @Override
@@ -330,11 +341,8 @@ public class WildcardPattern {
         if (StringUtils.hasLength(patternString)) {
             char[] ca = patternString.toCharArray();
             for (char c : ca) {
-                switch (c) {
-                    case STAR_CHAR:
-                    case QUESTION_CHAR:
-                    case PLUS_CHAR:
-                        return true;
+                if (c == STAR_CHAR || c == QUESTION_CHAR || c == PLUS_CHAR) {
+                    return true;
                 }
             }
         }
