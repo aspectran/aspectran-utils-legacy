@@ -49,14 +49,26 @@ public class NodeletGroup {
 
     private final boolean ignoreFirstChild;
 
+    /**
+     * Constructs a new, empty root nodelet group.
+     */
     public NodeletGroup() {
         this(StringUtils.EMPTY);
     }
 
+    /**
+     * Constructs a new root nodelet group with the specified name.
+     * @param name the name of the group
+     */
     public NodeletGroup(String name) {
         this(name, NodeletPath.DIVIDER + name, null);
     }
 
+    /**
+     * Constructs a new root nodelet group with the specified name and ignore-first-child flag.
+     * @param name the name of the group
+     * @param ignoreFirstChild if true, ignores the first child with the same name
+     */
     public NodeletGroup(String name, boolean ignoreFirstChild) {
         this(name, NodeletPath.DIVIDER + name, null, ignoreFirstChild);
     }
@@ -81,14 +93,26 @@ public class NodeletGroup {
         }
     }
 
+    /**
+     * Returns the name of this nodelet group.
+     * @return the name of the group
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Returns the XPath that this nodelet group is associated with.
+     * @return the XPath of the group
+     */
     public String getXpath() {
         return xpath;
     }
 
+    /**
+     * Returns the map of XPath expressions to {@link Nodelet}s for this group.
+     * @return the map of nodelets
+     */
     public Map<String, Nodelet> getNodeletMap() {
         if (parent != null) {
             return parent.getNodeletMap();
@@ -97,6 +121,10 @@ public class NodeletGroup {
         }
     }
 
+    /**
+     * Returns the map of XPath expressions to {@link EndNodelet}s for this group.
+     * @return the map of end-nodelets
+     */
     public Map<String, EndNodelet> getEndNodeletMap() {
         if (parent != null) {
             return parent.getEndNodeletMap();
@@ -105,6 +133,10 @@ public class NodeletGroup {
         }
     }
 
+    /**
+     * Returns the map of mount paths to nested {@link NodeletGroup}s.
+     * @return the map of mounted groups
+     */
     public Map<String, NodeletGroup> getMountedGroups() {
         if (parent != null) {
             return parent.getMountedGroups();
@@ -113,14 +145,29 @@ public class NodeletGroup {
         }
     }
 
+    /**
+     * Retrieves a {@link Nodelet} for the given XPath.
+     * @param xpath the XPath to look up
+     * @return the found {@link Nodelet}, or {@code null} if not found
+     */
     public Nodelet getNodelet(String xpath) {
         return getNodeletMap().get(xpath);
     }
 
+    /**
+     * Retrieves an {@link EndNodelet} for the given XPath.
+     * @param xpath the XPath to look up
+     * @return the found {@link EndNodelet}, or {@code null} if not found
+     */
     public EndNodelet getEndNodelet(String xpath) {
         return getEndNodeletMap().get(xpath);
     }
 
+    /**
+     * Retrieves a mounted {@link NodeletGroup} for the given XPath.
+     * @param xpath the XPath to look up
+     * @return the found {@link NodeletGroup}, or {@code null} if not found
+     */
     public NodeletGroup getMountedGroup(String xpath) {
         return getMountedGroups().get(xpath);
     }
