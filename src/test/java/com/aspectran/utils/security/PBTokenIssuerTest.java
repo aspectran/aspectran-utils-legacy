@@ -21,28 +21,139 @@ import com.aspectran.utils.apon.VariableParameters;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 /**
+ * Test cases for {@link PBTokenIssuer}.
+ *
  * <p>Created: 2019/11/25</p>
  */
 public class PBTokenIssuerTest {
 
+    private static final String DEFAULT_PASSWORD = "encryption-password-for-test";
+
+    private static final String CUSTOM_PASSWORD = "custom-encryption-password";
+
     @BeforeClass
     public static void passwordSetting() {
-        // System default
-        System.setProperty(PBEncryptionUtils.ENCRYPTION_PASSWORD_KEY, "encryption-password-for-test");
+        // System default password for static methods without explicit password
+        System.setProperty(PBEncryptionUtils.ENCRYPTION_PASSWORD_KEY, DEFAULT_PASSWORD);
     }
 
     @Test
-    public void testPBToken() throws InvalidPBTokenException {
+    public void testStaticPBTokenWithDefaultPassword() throws InvalidPBTokenException {
         Parameters params = new VariableParameters();
         params.putValue("p1", "v1");
         params.putValue("p2", "v2");
-        params.putValue("p3", "v3");
-        String token = PBTokenIssuer.getToken(params);
-        Parameters params2 = PBTokenIssuer.getPayload(token);
+        String token = PBTokenIssuer.createToken(params);
+        Parameters params2 = PBTokenIssuer.parseToken(token);
         assertEquals(params.toString(), params2.toString());
+    }
+
+    @Test
+    public void testStaticPBTokenWithCustomPassword() throws InvalidPBTokenException {
+        Parameters params = new VariableParameters();
+        params.putValue("p1", "v1");
+        params.putValue("p2", "v2");
+        String token = PBTokenIssuer.createToken(params, CUSTOM_PASSWORD);
+        Parameters params2 = PBTokenIssuer.parseToken(token, CUSTOM_PASSWORD);
+        assertEquals(params.toString(), params2.toString());
+    }
+
+    @Test
+    public void testStaticPBTokenWithDifferentDataTypes() throws InvalidPBTokenException {
+        Parameters params = new VariableParameters();
+        params.putValue("stringValue", "hello world");
+        params.putValue("intValue", 12345);
+        params.putValue("longValue(long)", 1234567890L);
+        params.putValue("doubleValue", 123.456);
+        params.putValue("booleanValue", true);
+        List<String> stringList = Arrays.asList("apple", "banana", "cherry");
+        params.putValue("stringList", stringList);
+
+        String token = PBTokenIssuer.createToken(params, CUSTOM_PASSWORD);
+        Parameters parsedParams = PBTokenIssuer.parseToken(token, CUSTOM_PASSWORD);
+
+        assertEquals("hello world", parsedParams.getString("stringValue"));
+        assertEquals(12345, (int)parsedParams.getInt("intValue"));
+        assertEquals(1234567890L, parsedParams.getLong("longValue").longValue());
+        assertEquals(123.456, parsedParams.getDouble("doubleValue"), 0.0);
+        assertTrue(parsedParams.getBoolean("booleanValue"));
+        assertEquals(stringList, parsedParams.getStringList("stringList"));
+    }
+
+    @Test
+    public void testStaticPBTokenWithNestedParameters() throws InvalidPBTokenException {
+        Parameters params = new VariableParameters();
+        params.putValue("p1", "v1");
+
+        Parameters nestedParams = new VariableParameters();
+        nestedParams.putValue("n1", "nv1");
+        nestedParams.putValue("n2", false);
+        params.putValue("nested", nestedParams);
+
+        String token = PBTokenIssuer.createToken(params, CUSTOM_PASSWORD);
+        Parameters parsedParams = PBTokenIssuer.parseToken(token, CUSTOM_PASSWORD);
+
+        assertEquals("v1", parsedParams.getString("p1"));
+        Parameters parsedNested = parsedParams.getParameters("nested");
+        assertNotNull(parsedNested);
+        assertEquals("nv1", parsedNested.getString("n1"));
+        assertFalse(parsedNested.getBoolean("n2"));
+        assertEquals(nestedParams.toString(), parsedNested.toString());
+    }
+
+    @Test
+    public void testStaticEmptyParameters() throws InvalidPBTokenException {
+        Parameters params = new VariableParameters();
+        String token = PBTokenIssuer.createToken(params, CUSTOM_PASSWORD);
+        Parameters parsedParams = PBTokenIssuer.parseToken(token, CUSTOM_PASSWORD);
+        assertTrue(parsedParams.isEmpty());
+    }
+
+    @Test
+    public void testStaticInvalidTokenMalformed() {
+        try {
+            PBTokenIssuer.parseToken("this-is-not-a-valid-token", CUSTOM_PASSWORD);
+            fail("Expected InvalidPBTokenException to be thrown");
+        } catch (InvalidPBTokenException e) {
+            assertTrue(true); // Expected exception caught
+        }
+    }
+
+    @Test
+    public void testStaticInvalidTokenWrongPassword() {
+        Parameters params = new VariableParameters();
+        params.putValue("data", "some-secret-data");
+
+        String token = PBTokenIssuer.createToken(params, "password-one");
+        try {
+            PBTokenIssuer.parseToken(token, "password-two"); // This should fail
+            fail("Expected InvalidPBTokenException to be thrown");
+        } catch (InvalidPBTokenException e) {
+            assertTrue(true); // Expected exception caught
+        }
+    }
+
+    @Test
+    public void testStaticValidateToken() throws InvalidPBTokenException {
+        Parameters params = new VariableParameters();
+        params.putValue("p1", "v1");
+        String token = PBTokenIssuer.createToken(params, CUSTOM_PASSWORD);
+        PBTokenIssuer.validate(token, CUSTOM_PASSWORD); // Should not throw exception
+    }
+
+    @Test
+    public void testStaticValidateTokenInvalid() {
+        try {
+            PBTokenIssuer.validate("invalid-token", CUSTOM_PASSWORD);
+            fail("Expected InvalidPBTokenException to be thrown");
+        } catch (InvalidPBTokenException e) {
+            assertTrue(true); // Expected exception caught
+        }
     }
 
 }
