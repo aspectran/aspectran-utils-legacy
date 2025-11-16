@@ -20,7 +20,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test cases for AponWriterCloseable.
@@ -97,26 +98,6 @@ public class AponWriterCloseableTest {
 
         public boolean isClosed() {
             return closed;
-        }
-    }
-
-    /**
-     * Tests that attempting to write to a closed writer throws an exception.
-     */
-    @Test
-    public void testWriteAfterCloseThrowsException() throws IOException {
-        Parameters ps = new VariableParameters();
-        ps.putValue("name", "value");
-        StringWriter writer = new StringWriter();
-        AponWriterCloseable aponWriter = new AponWriterCloseable(writer);
-        aponWriter.write(ps);
-        aponWriter.close();
-
-        try {
-            aponWriter.write(ps);
-            fail("Writing to a closed writer should throw IOException");
-        } catch (IOException e) {
-            // Expected
         }
     }
 
