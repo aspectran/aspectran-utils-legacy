@@ -21,7 +21,7 @@ import java.io.IOException;
  * The base class for all exceptions thrown when an error occurs while reading,
  * parsing, or interpreting APON (Aspectran Parameters Object Notation) text.
  * <p>
- * This exception extends {@link java.io.IOException} to allow callers to handle
+ * This exception extends {@link IOException} to allow callers to handle
  * both I/O errors and APON-specific parsing errors in a single catch block,
  * especially when working with {@link AponReader}.
  * </p>

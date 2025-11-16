@@ -15,6 +15,8 @@
  */
 package com.aspectran.utils.apon;
 
+import com.aspectran.utils.annotation.jsr305.NonNull;
+
 /**
  * Thrown when the actual value type of a parameter does not match the expected type.
  * <p>This exception is typically raised while parsing or validating APON values when a
@@ -35,6 +37,7 @@ public class IncompatibleValueTypeException extends InvalidParameterValueExcepti
         super(buildMessage(parameterValue, expectedValueType));
     }
 
+    @NonNull
     private static String buildMessage(ParameterValue parameterValue, ValueType expectedValueType) {
         String paramName = (parameterValue != null ? parameterValue.getQualifiedName() : null);
         ValueType actualType = (parameterValue != null ? parameterValue.getValueType() : null);

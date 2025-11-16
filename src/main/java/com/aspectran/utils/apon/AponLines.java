@@ -22,12 +22,14 @@ import com.aspectran.utils.annotation.jsr305.NonNull;
 import java.io.StringWriter;
 import java.util.Arrays;
 
+import static com.aspectran.utils.apon.AponFormat.*;
+
 /**
  * A utility class for conveniently writing text in APON format.
  *
  * @since 7.4.3
  */
-public class AponLines extends AponFormat {
+public class AponLines {
 
     /**
      * Internal writer state indicating the currently open structure.
@@ -59,22 +61,107 @@ public class AponLines extends AponFormat {
     }
 
     /**
-     * Append a raw line of APON content to the current context.
-     * When inside a text block, a leading '|' marker is inserted automatically.
-     * @param line the content line to append; ignored if {@code null}
+     * Begin a named block: <code>name: {</code>.
+     * @param name the block name
      * @return this builder for chaining
+     * @throws IllegalArgumentException if the name is blank
+     * @throws IllegalStateException if not currently in a block context
      */
-    public AponLines line(String line) {
+    public AponLines block(String name) {
+        checkName(name);
+        if (stateStack.peek() != State.BLOCK) {
+            throw new IllegalStateException("Named blocks can only be added inside another block, " +
+                    "not an array or text block");
+        }
+        stateStack.push(State.BLOCK);
+        lines.append(name).append(NAME_VALUE_SEPARATOR).append(SPACE).append(BLOCK_OPEN).append(NEW_LINE);
+        return this;
+    }
+
+    /**
+     * Begin an anonymous block within an array element: <code>{</code>
+     * or initialize the root block when first constructed.
+     * @return this builder for chaining
+     * @throws IllegalStateException if not currently in an array when nested
+     */
+    public AponLines block() {
         if (stateStack.isEmpty()) {
-            checkState(State.BLOCK);
-        }
-        if (line != null) {
-            if (stateStack.peek() == State.TEXT) {
-                lines.append(TEXT_LINE_START);
+            stateStack.push(State.BLOCK);
+        } else {
+            if (stateStack.peek() != State.ARRAY) {
+                throw new IllegalStateException("Anonymous blocks can only be added inside an array. " +
+                        "To add a named block, use block(\"name\").");
             }
-            escape(line);
-            lines.append(NEW_LINE);
+            stateStack.push(State.BLOCK);
+            lines.append(BLOCK_OPEN).append(NEW_LINE);
         }
+        return this;
+    }
+
+    /**
+     * Begin a named array: name: <code>[</code>
+     * @param name the array name
+     * @return this builder for chaining
+     * @throws IllegalArgumentException if the name is blank
+     * @throws IllegalStateException if not currently in a block context
+     */
+    public AponLines array(String name) {
+        checkName(name);
+        if (stateStack.peek() != State.BLOCK) {
+            throw new IllegalStateException("Named arrays can only be added inside a block, " +
+                    "not an array or text block");
+        }
+        stateStack.push(State.ARRAY);
+        lines.append(name).append(NAME_VALUE_SEPARATOR).append(SPACE).append(ARRAY_OPEN).append(NEW_LINE);
+        return this;
+    }
+
+    /**
+     * Begin an anonymous array element: <code>[</code>
+     * @return this builder for chaining
+     * @throws IllegalStateException if not currently in an array context
+     */
+    public AponLines array() {
+        if (stateStack.peek() != State.ARRAY) {
+            throw new IllegalStateException("Anonymous arrays can only be added inside another array. " +
+                    "To add a named array, use array(\"name\").");
+        }
+        stateStack.push(State.ARRAY);
+        lines.append(ARRAY_OPEN).append(NEW_LINE);
+        return this;
+    }
+
+    /**
+     * Begin a named multi-line text value: <code>name: (</code>.
+     * Lines should then be added via {@link #line(String)} and will be prefixed with '|'.
+     * @param name the parameter name
+     * @return this builder for chaining
+     * @throws IllegalArgumentException if the name is blank
+     * @throws IllegalStateException if not currently in a block context
+     */
+    public AponLines text(String name) {
+        checkName(name);
+        if (stateStack.peek() != State.BLOCK) {
+            throw new IllegalStateException("Named text blocks can only be added inside a block, " +
+                    "not an array or another text block");
+        }
+        stateStack.push(State.TEXT);
+        lines.append(name).append(NAME_VALUE_SEPARATOR).append(SPACE).append(TEXT_OPEN).append(NEW_LINE);
+        return this;
+    }
+
+    /**
+     * Begin an anonymous multi-line text value: <code>(</code>.
+     * @return this builder for chaining
+     * @throws IllegalStateException if not currently in an array context
+     */
+    public AponLines text() {
+        if (stateStack.peek() != State.ARRAY) {
+            throw new IllegalStateException("Anonymous text blocks can only be added inside an array. " +
+                    "To add a named text block, use text(\"name\").");
+        }
+        stateStack.push(State.TEXT);
+        lines.append(TEXT_OPEN).append(NEW_LINE);
         return this;
     }
 
@@ -88,7 +175,10 @@ public class AponLines extends AponFormat {
      */
     public AponLines line(String name, Object value) {
         checkName(name);
-        checkState(State.BLOCK);
+        if (stateStack.peek() != State.BLOCK) {
+            throw new IllegalStateException("Named parameters can only be added inside a block, " +
+                    "not an array or text block");
+        }
         if (value != null) {
             lines.append(name).append(NAME_VALUE_SEPARATOR).append(SPACE);
             escape(value);
@@ -98,89 +188,44 @@ public class AponLines extends AponFormat {
     }
 
     /**
-     * Begin a named block: name: {
-     * @param name the block name
+     * Append a raw line of APON content to the current array block or text block.
+     * When inside a text block, a leading '|' marker is inserted automatically.
+     * @param line the content line to append; ignored if {@code null}
      * @return this builder for chaining
-     * @throws IllegalArgumentException if the name is blank
-     * @throws IllegalStateException if not currently in a block context
      */
-    public AponLines block(String name) {
-        checkName(name);
-        checkState(State.BLOCK);
-        stateStack.push(State.BLOCK);
-        lines.append(name).append(NAME_VALUE_SEPARATOR).append(SPACE).append(CURLY_BRACKET_OPEN).append(NEW_LINE);
-        return this;
-    }
-
-    /**
-     * Begin an anonymous block within an array element: {
-     * or initialize the root block when first constructed.
-     * @return this builder for chaining
-     * @throws IllegalStateException if not currently in an array when nested
-     */
-    public AponLines block() {
+    public AponLines line(String line) {
         if (stateStack.isEmpty()) {
-            stateStack.push(State.BLOCK);
-        } else {
-            checkState(State.ARRAY);
-            stateStack.push(State.BLOCK);
-            lines.append(CURLY_BRACKET_OPEN).append(NEW_LINE);
+            throw new IllegalStateException("AponLines must always start with a root block. " +
+                    "Call block() before calling line() method.");
+        }
+        if (stateStack.peek() != State.ARRAY && stateStack.peek() != State.TEXT) {
+            throw new IllegalStateException("Anonymous lines can only be added inside an array block or a text block. " +
+                    "Call array() or text() to start a new block.");
+        }
+        if (line != null) {
+            if (stateStack.peek() == State.TEXT) {
+                lines.append(TEXT_LINE_START);
+            }
+            escape(line);
+            lines.append(NEW_LINE);
         }
         return this;
     }
 
     /**
-     * Begin a named array: name: [
-     * @param name the array name
+     * Append a raw line of APON content to the current context.
+     * @param line the content line to append; ignored if {@code null}
      * @return this builder for chaining
-     * @throws IllegalArgumentException if the name is blank
-     * @throws IllegalStateException if not currently in a block context
      */
-    public AponLines array(String name) {
-        checkName(name);
-        checkState(State.BLOCK);
-        stateStack.push(State.ARRAY);
-        lines.append(name).append(NAME_VALUE_SEPARATOR).append(SPACE).append(SQUARE_BRACKET_OPEN).append(NEW_LINE);
-        return this;
-    }
-
-    /**
-     * Begin an anonymous array element: [
-     * @return this builder for chaining
-     * @throws IllegalStateException if not currently in an array context
-     */
-    public AponLines array() {
-        checkState(State.ARRAY);
-        stateStack.push(State.ARRAY);
-        lines.append(SQUARE_BRACKET_OPEN).append(NEW_LINE);
-        return this;
-    }
-
-    /**
-     * Begin a named multi-line text value: name: (
-     * Lines should then be added via {@link #line(String)} and will be prefixed with '|'.
-     * @param name the parameter name
-     * @return this builder for chaining
-     * @throws IllegalArgumentException if the name is blank
-     * @throws IllegalStateException if not currently in a block context
-     */
-    public AponLines text(String name) {
-        checkName(name);
-        checkState(State.BLOCK);
-        stateStack.push(State.TEXT);
-        lines.append(name).append(NAME_VALUE_SEPARATOR).append(SPACE).append(ROUND_BRACKET_OPEN).append(NEW_LINE);
-        return this;
-    }
-
-    /**
-     * Begin an anonymous multi-line text value: (
-     * @return this builder for chaining
-     * @throws IllegalStateException if not currently in an array context
-     */
-    public AponLines text() {
-        checkState(State.ARRAY);
-        stateStack.push(State.TEXT);
-        lines.append(ROUND_BRACKET_OPEN).append(NEW_LINE);
+    public AponLines raw(String line) {
+        if (stateStack.isEmpty()) {
+            // This path should not be taken given the constructor initializes the state.
+            throw new IllegalStateException("Cannot add a line to an empty structure.");
+        }
+        if (line != null) {
+            lines.append(line);
+            lines.append(NEW_LINE);
+        }
         return this;
     }
 
@@ -191,21 +236,21 @@ public class AponLines extends AponFormat {
      * @throws IllegalStateException if there is no open structure to end
      */
     public AponLines end() {
-        if (stateStack.isEmpty()) {
-            checkState(State.BLOCK);
+        if (stateStack.size() <= 1) {
+            throw new IllegalStateException("Mismatched end() call; no open block, array, or text to close");
         }
         State state = stateStack.pop();
         switch (state) {
             case BLOCK:
                 if (!stateStack.isEmpty()) {
-                    lines.append(CURLY_BRACKET_CLOSE).append(NEW_LINE);
+                    lines.append(BLOCK_CLOSE).append(NEW_LINE);
                 }
                 break;
             case ARRAY:
-                lines.append(SQUARE_BRACKET_CLOSE).append(NEW_LINE);
+                lines.append(ARRAY_CLOSE).append(NEW_LINE);
                 break;
             case TEXT:
-                lines.append(ROUND_BRACKET_CLOSE).append(NEW_LINE);
+                lines.append(TEXT_CLOSE).append(NEW_LINE);
                 break;
             default:
                 throw new IllegalStateException("Must be one of these states: " + Arrays.toString(State.values()));
@@ -213,18 +258,19 @@ public class AponLines extends AponFormat {
         return this;
     }
 
-    private void escape(@NonNull Object object) {
-        if (object instanceof String && (
-                ((String)object).indexOf(DOUBLE_QUOTE_CHAR) >= 0 ||
-                        ((String)object).indexOf(SINGLE_QUOTE_CHAR) >= 0 ||
-                        ((String)object).startsWith(SPACE) ||
-                        ((String)object).endsWith(SPACE) ||
-                        ((String)object).contains(NEW_LINE))) {
-            lines.append(DOUBLE_QUOTE_CHAR);
-            lines.append(AponWriter.escape(((String)object)));
-            lines.append(DOUBLE_QUOTE_CHAR);
+    private void escape(@NonNull Object value) {
+        if (value instanceof CharSequence) {
+            CharSequence cs = (CharSequence)value;
+            String str = cs.toString();
+            if (AponFormat.needsQuoting(str)) {
+                lines.append(DOUBLE_QUOTE_CHAR);
+                lines.append(AponFormat.escape(str));
+                lines.append(DOUBLE_QUOTE_CHAR);
+            } else {
+                lines.append(str);
+            }
         } else {
-            lines.append(String.valueOf(object));
+            lines.append(value.toString());
         }
     }
 
@@ -245,13 +291,7 @@ public class AponLines extends AponFormat {
 
     private void checkName(String name) {
         if (!StringUtils.hasText(name)) {
-            throw new IllegalArgumentException("Invalid name: " + name);
-        }
-    }
-
-    private void checkState(State required) {
-        if (stateStack.isEmpty() || stateStack.peek() != required) {
-            throw new IllegalStateException("Required state: " + required);
+            throw new IllegalArgumentException("Parameter name must not be null or empty");
         }
     }
 

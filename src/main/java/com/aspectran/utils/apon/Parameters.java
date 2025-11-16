@@ -22,22 +22,29 @@ import java.util.List;
 
 /**
  * Central contract representing a mutable collection of named parameters in APON.
- * <p>
- * A {@code Parameters} instance acts as a typed map where each entry is a
+ * <p>A {@code Parameters} instance acts as a typed map where each entry is a
  * {@link Parameter} that can store scalar values, arrays, or nested
- * {@link Parameters} (for hierarchical structures). Implementations may expose
- * either a fixed structure (predefined keys) or allow dynamic addition of
- * parameters at runtime. Numerous convenience getters are provided to retrieve
- * values in the desired Java type.
- * </p>
+ * {@link Parameters} (for hierarchical structures).</p>
+ * <p>Implementations of this interface, such as {@link AbstractParameters} and its
+ * concrete subclasses like {@link DefaultParameters} and {@link VariableParameters},
+ * may expose either a fixed structure (with predefined {@link ParameterKey}s)
+ * or allow dynamic addition of parameters at runtime. Numerous convenience
+ * getter methods are provided to retrieve values in the desired Java type.</p>
+ *
+ * @see AbstractParameters
+ * @see DefaultParameters
+ * @see VariableParameters
  */
 public interface Parameters {
 
+    boolean isCompactStyle();
+
+    void setCompactStyle(boolean compactStyle);
+
     /**
-     * Returns whether the parameter can be added after the parameters instance
-     * is created.
-     * @return {@code true} if the parameter can be added after the parameters
-     *      instance is created, otherwise {@code false}
+     * Returns whether the parameter structure is fixed. A fixed structure means
+     * that new parameters cannot be added at runtime.
+     * @return {@code true} if the structure is fixed, otherwise {@code false}
      */
     boolean isStructureFixed();
 
@@ -96,6 +103,12 @@ public interface Parameters {
     String getQualifiedName(ParameterKey key);
 
     /**
+     * Returns all parameter names associated with this {@code Parameters}.
+     * @return an array of all parameter names associated with this {@code Parameters}
+     */
+    String[] getParameterNames();
+
+    /**
      * Return the internal {@link ParameterValue} holder by name, or {@code null} if absent.
      * @param name the parameter name
      * @return the holder or {@code null}
@@ -116,10 +129,11 @@ public interface Parameters {
     Collection<ParameterValue> getParameterValues();
 
     /**
-     * Returns all parameter names associated with this {@code Parameters}.
-     * @return an array of all parameter names associated with this {@code Parameters}
+     * Copy all values from the given container into this one, overwriting existing values.
+     * Structure is not altered; only values are affected.
+     * @param parameters the source of values to copy
      */
-    String[] getParameterNames();
+    void mergeParameterValues(Parameters parameters);
 
     /**
      * Returns the number of parameters in this collection.
@@ -132,6 +146,37 @@ public interface Parameters {
      * @return {@code true} if this collection contains no parameters
      */
     boolean isEmpty();
+
+    /**
+     * Returns the Parameter with the specified name.
+     * @param name the parameter name
+     * @return the Parameter with the specified name, or {@code null} if it does not exist
+     */
+    Parameter getParameter(String name);
+
+    /**
+     * Returns the Parameter corresponding to the specified parameter definition.
+     * @param key the parameter definition
+     * @return the Parameter corresponding to the specified parameter definition,
+     *      or {@code null} if it does not exist
+     */
+    Parameter getParameter(ParameterKey key);
+
+    /**
+     * Removes the parameter with the specified name.
+     * This operation is only allowed if the parameter structure is not fixed.
+     * @param name the name of the parameter to remove
+     * @throws IllegalStateException if the parameter structure is fixed
+     */
+    void removeParameter(String name);
+
+    /**
+     * Removes the parameter corresponding to the specified parameter definition.
+     * This operation is only allowed if the parameter structure is not fixed.
+     * @param key the parameter definition of the parameter to remove
+     * @throws IllegalStateException if the parameter structure is fixed
+     */
+    void removeParameter(ParameterKey key);
 
     /**
      * Returns whether this parameter exists.
@@ -178,44 +223,6 @@ public interface Parameters {
     boolean hasValue(ParameterKey key);
 
     /**
-     * Returns the Parameter with the specified name.
-     * @param name the parameter name
-     * @return the Parameter with the specified name, or {@code null} if it does not exist
-     */
-    Parameter getParameter(String name);
-
-    /**
-     * Returns the Parameter corresponding to the specified parameter definition.
-     * @param key the parameter definition
-     * @return the Parameter corresponding to the specified parameter definition,
-     *      or {@code null} if it does not exist
-     */
-    Parameter getParameter(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Object getValue(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Object getValue(ParameterKey key);
-
-    /**
-     * Copy all values from the given container into this one, overwriting existing values.
-     * Structure is not altered; only values are affected.
-     * @param parameters the source of values to copy
-     */
-    void putAll(Parameters parameters);
-
-    /**
      * Put a value into the Parameter with the specified name.
      * @param name the parameter name
      * @param value the value of parameter
@@ -258,462 +265,12 @@ public interface Parameters {
     void removeValue(ParameterKey key);
 
     /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    String getString(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code defaultValue} if the parameter does not exist.
-     * @param name the parameter name
-     * @param defaultValue the default value to return if no value is found
-     * @return the value for the specified parameter, or {@code defaultValue}
-     */
-    String getString(String name, String defaultValue);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    String[] getStringArray(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    String getString(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code defaultValue} if the parameter does not exist.
-     * @param key the parameter definition
-     * @param defaultValue the default value to return if no value is found
-     * @return the value for the specified parameter, or {@code defaultValue}
-     */
-    String getString(ParameterKey key, String defaultValue);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    String[] getStringArray(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    List<String> getStringList(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    List<String> getStringList(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Integer getInt(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code defaultValue} if the parameter does not exist.
-     * @param name the parameter name
-     * @param defaultValue the default value to return if no value is found
-     * @return the value for the specified parameter, or {@code defaultValue}
-     */
-    int getInt(String name, int defaultValue);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Integer[] getIntArray(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Integer getInt(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code defaultValue} if the parameter does not exist.
-     * @param key the parameter definition
-     * @param defaultValue the default value to return if no value is found
-     * @return the value for the specified parameter, or {@code defaultValue}
-     */
-    int getInt(ParameterKey key, int defaultValue);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Integer[] getIntArray(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    List<Integer> getIntList(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    List<Integer> getIntList(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Long getLong(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code defaultValue} if the parameter does not exist.
-     * @param name the parameter name
-     * @param defaultValue the default value to return if no value is found
-     * @return the value for the specified parameter, or {@code defaultValue}
-     */
-    long getLong(String name, long defaultValue);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Long[] getLongArray(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Long getLong(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code defaultValue} if the parameter does not exist.
-     * @param key the parameter definition
-     * @param defaultValue the default value to return if no value is found
-     * @return the value for the specified parameter, or {@code defaultValue}
-     */
-    long getLong(ParameterKey key, long defaultValue);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Long[] getLongArray(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    List<Long> getLongList(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    List<Long> getLongList(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Float getFloat(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code defaultValue} if the parameter does not exist.
-     * @param name the parameter name
-     * @param defaultValue the default value to return if no value is found
-     * @return the value for the specified parameter, or {@code defaultValue}
-     */
-    float getFloat(String name, float defaultValue);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Float[] getFloatArray(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Float getFloat(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code defaultValue} if the parameter does not exist.
-     * @param key the parameter definition
-     * @param defaultValue the default value to return if no value is found
-     * @return the value for the specified parameter, or {@code defaultValue}
-     */
-    float getFloat(ParameterKey key, float defaultValue);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Float[] getFloatArray(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    List<Float> getFloatList(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    List<Float> getFloatList(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Double getDouble(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code defaultValue} if the parameter does not exist.
-     * @param name the parameter name
-     * @param defaultValue the default value to return if no value is found
-     * @return the value for the specified parameter, or {@code defaultValue}
-     */
-    double getDouble(String name, double defaultValue);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Double[] getDoubleArray(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Double getDouble(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code defaultValue} if the parameter does not exist.
-     * @param key the parameter definition
-     * @param defaultValue the default value to return if no value is found
-     * @return the value for the specified parameter, or {@code defaultValue}
-     */
-    double getDouble(ParameterKey key, double defaultValue);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Double[] getDoubleArray(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    List<Double> getDoubleList(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    List<Double> getDoubleList(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Boolean getBoolean(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code defaultValue} if the parameter does not exist.
-     * @param name the parameter name
-     * @param defaultValue the default value to return if no value is found
-     * @return the value for the specified parameter, or {@code defaultValue}
-     */
-    boolean getBoolean(String name, boolean defaultValue);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Boolean[] getBooleanArray(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Boolean getBoolean(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code defaultValue} if the parameter does not exist.
-     * @param key the parameter definition
-     * @param defaultValue the default value to return if no value is found
-     * @return the value for the specified parameter, or {@code defaultValue}
-     */
-    boolean getBoolean(ParameterKey key, boolean defaultValue);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    Boolean[] getBooleanArray(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    List<Boolean> getBooleanList(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    List<Boolean> getBooleanList(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param <T> the type parameter
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    <T extends Parameters> T getParameters(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param <T> the type parameter
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    <T extends Parameters> T[] getParametersArray(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param <T> the type parameter
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    <T extends Parameters> T getParameters(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param <T> the type parameter
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    <T extends Parameters> T[] getParametersArray(ParameterKey key);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param <T> the type parameter
-     * @param name the parameter name
-     * @return the value for the specified parameter, or {@code null}
-     */
-    <T extends Parameters> List<T> getParametersList(String name);
-
-    /**
-     * Return the value for the specified parameter,
-     * or {@code null} if the parameter does not exist.
-     * @param <T> the type parameter
-     * @param key the parameter definition
-     * @return the value for the specified parameter, or {@code null}
-     */
-    <T extends Parameters> List<T> getParametersList(ParameterKey key);
-
-    /**
      * Create a new {@link ParameterValue} holder with the given type under the given name.
      * @param name the parameter name
      * @param valueType the declared type
      * @return a new holder associated with this container
      */
-    ParameterValue newParameterValue(String name, ValueType valueType);
+    ParameterValue attachParameterValue(String name, ValueType valueType);
 
     /**
      * Create a new {@link ParameterValue} holder with the given type and array flag.
@@ -722,23 +279,27 @@ public interface Parameters {
      * @param array whether the parameter accepts multiple values
      * @return a new holder associated with this container
      */
-    ParameterValue newParameterValue(String name, ValueType valueType, boolean array);
+    ParameterValue attachParameterValue(String name, ValueType valueType, boolean array);
 
     /**
-     * Create and attach a new nested {@link Parameters} instance under the given name.
+     * Creates a new nested {@link Parameters} instance and attaches it as the value for the specified parameter name.
+     * This method ensures that the newly created {@link Parameters} instance becomes the value of the specified parameter,
+     * potentially replacing an existing value.
      * @param <T> the concrete subtype
      * @param name the parameter name
-     * @return the created nested container
+     * @return the created and attached nested container
      */
-    <T extends Parameters> T newParameters(String name);
+    <T extends Parameters> T attachParameters(String name);
 
     /**
-     * Create and attach a new nested {@link Parameters} instance under the given key.
+     * Creates a new nested {@link Parameters} instance and attaches it as the value for the specified parameter key.
+     * This method ensures that the newly created {@link Parameters} instance becomes the value of the specified parameter,
+     * potentially replacing an existing value.
      * @param <T> the concrete subtype
      * @param key the parameter definition
-     * @return the created nested container
+     * @return the created and attached nested container
      */
-    <T extends Parameters> T newParameters(ParameterKey key);
+    <T extends Parameters> T attachParameters(ParameterKey key);
 
     /**
      * Ensure a nested {@link Parameters} exists under the given name and return it.
@@ -759,12 +320,480 @@ public interface Parameters {
     <T extends Parameters> T touchParameters(ParameterKey key);
 
     /**
+     * Creates a new nested {@link Parameters} instance without attaching it as the value for the specified parameter name.
+     * This method is responsible only for the instantiation and basic setup (like setting the proprietor)
+     * of the nested {@link Parameters} instance. The created instance is not automatically assigned as this parameter's value.
+     * @param <T> the concrete subtype
+     * @param name the parameter name
+     * @return the newly created, unattached nested container
+     */
+    <T extends Parameters> T createParameters(String name);
+
+    /**
      * Updates the holder of the subparameters belonging to this parameter so that
      * the back-reference of nested parameter holders to point to the given container.
      * Primarily used internally when moving/merging parameters.
      * @param container the new parent container
      */
     void updateContainer(Parameters container);
+
+    /**
+     * Return the value for the specified parameter,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter, or {@code null}
+     */
+    Object getValue(String name);
+
+    /**
+     * Return the value for the specified parameter,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter, or {@code null}
+     */
+    Object getValue(ParameterKey key);
+
+    /**
+     * Return the value for the specified parameter as a list,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as a list, or {@code null}
+     */
+    List<?> getValueList(String name);
+
+    /**
+     * Return the value for the specified parameter as a list,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as a list, or {@code null}
+     */
+    List<?> getValueList(ParameterKey key);
+
+    /**
+     * Returns the value for the specified parameter as a {@code String}.
+     * @param name the parameter name
+     * @return the value as a {@code String}, or {@code null} if the parameter does not exist
+     */
+    String getString(String name);
+
+    /**
+     * Returns the value for the specified parameter as a {@code String}.
+     * @param name the parameter name
+     * @param defaultValue the default value to return if the parameter does not exist
+     * @return the value as a {@code String}, or {@code defaultValue} if not found
+     */
+    String getString(String name, String defaultValue);
+
+    /**
+     * Returns the value for the specified parameter as a {@code String}.
+     * @param key the parameter definition
+     * @return the value as a {@code String}, or {@code null} if the parameter does not exist
+     */
+    String getString(ParameterKey key);
+
+    /**
+     * Returns the value for the specified parameter as a {@code String}.
+     * @param key the parameter definition
+     * @param defaultValue the default value to return if the parameter does not exist
+     * @return the value as a {@code String}, or {@code defaultValue} if not found
+     */
+    String getString(ParameterKey key, String defaultValue);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link String} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as an array of {@link String} instances, or {@code null}
+     */
+    String[] getStringArray(String name);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link String} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as an array of {@link String} instances, or {@code null}
+     */
+    String[] getStringArray(ParameterKey key);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link String} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as a list of {@link String} instances, or {@code null}
+     */
+    List<String> getStringList(String name);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link String} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as a list of {@link String} instances, or {@code null}
+     */
+    List<String> getStringList(ParameterKey key);
+
+    /**
+     * Returns the value for the specified parameter as an {@code Integer}.
+     * @param name the parameter name
+     * @return the value as an {@code Integer}, or {@code null} if the parameter does not exist
+     */
+    Integer getInt(String name);
+
+    /**
+     * Returns the value for the specified parameter as an {@code int}.
+     * @param name the parameter name
+     * @param defaultValue the default value to return if the parameter does not exist
+     * @return the value as an {@code int}, or {@code defaultValue} if not found
+     */
+    int getInt(String name, int defaultValue);
+
+    /**
+     * Returns the value for the specified parameter as an {@code Integer}.
+     * @param key the parameter definition
+     * @return the value as an {@code Integer}, or {@code null} if the parameter does not exist
+     */
+    Integer getInt(ParameterKey key);
+
+    /**
+     * Returns the value for the specified parameter as an {@code int}.
+     * @param key the parameter definition
+     * @param defaultValue the default value to return if the parameter does not exist
+     * @return the value as an {@code int}, or {@code defaultValue} if not found
+     */
+    int getInt(ParameterKey key, int defaultValue);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link Integer} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as an array of {@link Integer} instances, or {@code null}
+     */
+    Integer[] getIntArray(String name);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link Integer} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as an array of {@link Integer} instances, or {@code null}
+     */
+    Integer[] getIntArray(ParameterKey key);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Integer} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as a list of {@link Integer} instances, or {@code null}
+     */
+    List<Integer> getIntList(String name);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Integer} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as a list of {@link Integer} instances, or {@code null}
+     */
+    List<Integer> getIntList(ParameterKey key);
+
+    /**
+     * Returns the value for the specified parameter as a {@code Long}.
+     * @param name the parameter name
+     * @return the value as a {@code Long}, or {@code null} if the parameter does not exist
+     */
+    Long getLong(String name);
+
+    /**
+     * Returns the value for the specified parameter as a {@code long}.
+     * @param name the parameter name
+     * @param defaultValue the default value to return if the parameter does not exist
+     * @return the value as a {@code long}, or {@code defaultValue} if not found
+     */
+    long getLong(String name, long defaultValue);
+
+    /**
+     * Returns the value for the specified parameter as a {@code Long}.
+     * @param key the parameter definition
+     * @return the value as a {@code Long}, or {@code null} if the parameter does not exist
+     */
+    Long getLong(ParameterKey key);
+
+    /**
+     * Returns the value for the specified parameter as a {@code long}.
+     * @param key the parameter definition
+     * @param defaultValue the default value to return if the parameter does not exist
+     * @return the value as a {@code long}, or {@code defaultValue} if not found
+     */
+    long getLong(ParameterKey key, long defaultValue);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link Long} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as an array of {@link Long} instances, or {@code null}
+     */
+    Long[] getLongArray(String name);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link Long} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as an array of {@link Long} instances, or {@code null}
+     */
+    Long[] getLongArray(ParameterKey key);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Long} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as a list of {@link Long} instances, or {@code null}
+     */
+    List<Long> getLongList(String name);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Long} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as a list of {@link Long} instances, or {@code null}
+     */
+    List<Long> getLongList(ParameterKey key);
+
+    /**
+     * Returns the value for the specified parameter as a {@code Float}.
+     * @param name the parameter name
+     * @return the value as a {@code Float}, or {@code null} if the parameter does not exist
+     */
+    Float getFloat(String name);
+
+    /**
+     * Returns the value for the specified parameter as a {@code float}.
+     * @param name the parameter name
+     * @param defaultValue the default value to return if the parameter does not exist
+     * @return the value as a {@code float}, or {@code defaultValue} if not found
+     */
+    float getFloat(String name, float defaultValue);
+
+    /**
+     * Returns the value for the specified parameter as a {@code Float}.
+     * @param key the parameter definition
+     * @return the value as a {@code Float}, or {@code null} if the parameter does not exist
+     */
+    Float getFloat(ParameterKey key);
+
+    /**
+     * Returns the value for the specified parameter as a {@code float}.
+     * @param key the parameter definition
+     * @param defaultValue the default value to return if the parameter does not exist
+     * @return the value as a {@code float}, or {@code defaultValue} if not found
+     */
+    float getFloat(ParameterKey key, float defaultValue);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link Float} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as an array of {@link Float} instances, or {@code null}
+     */
+    Float[] getFloatArray(String name);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link Float} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as a float array, or {@code null}
+     */
+    Float[] getFloatArray(ParameterKey key);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Float} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as a list of {@link Float} instances, or {@code null}
+     */
+    List<Float> getFloatList(String name);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Float} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as a list of {@link Float} instances, or {@code null}
+     */
+    List<Float> getFloatList(ParameterKey key);
+
+    /**
+     * Returns the value for the specified parameter as a {@code Double}.
+     * @param name the parameter name
+     * @return the value as a {@code Double}, or {@code null} if the parameter does not exist
+     */
+    Double getDouble(String name);
+
+    /**
+     * Returns the value for the specified parameter as a {@code double}.
+     * @param name the parameter name
+     * @param defaultValue the default value to return if the parameter does not exist
+     * @return the value as a {@code double}, or {@code defaultValue} if not found
+     */
+    double getDouble(String name, double defaultValue);
+
+    /**
+     * Returns the value for the specified parameter as a {@code Double}.
+     * @param key the parameter definition
+     * @return the value as a {@code Double}, or {@code null} if the parameter does not exist
+     */
+    Double getDouble(ParameterKey key);
+
+    /**
+     * Returns the value for the specified parameter as a {@code double}.
+     * @param key the parameter definition
+     * @param defaultValue the default value to return if the parameter does not exist
+     * @return the value as a {@code double}, or {@code defaultValue} if not found
+     */
+    double getDouble(ParameterKey key, double defaultValue);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link Double} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as an array of {@link Double} instances, or {@code null}
+     */
+    Double[] getDoubleArray(String name);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link Double} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as an array of {@link Double} instances, or {@code null}
+     */
+    Double[] getDoubleArray(ParameterKey key);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Double} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as a list of {@link Double} instances, or {@code null}
+     */
+    List<Double> getDoubleList(String name);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Double} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as a list of {@link Double} instances, or {@code null}
+     */
+    List<Double> getDoubleList(ParameterKey key);
+
+    /**
+     * Returns the value for the specified parameter as a {@code Boolean}.
+     * @param name the parameter name
+     * @return the value as a {@code Boolean}, or {@code null} if the parameter does not exist
+     */
+    Boolean getBoolean(String name);
+
+    /**
+     * Returns the value for the specified parameter as a {@code boolean}.
+     * @param name the parameter name
+     * @param defaultValue the default value to return if the parameter does not exist
+     * @return the value as a {@code boolean}, or {@code defaultValue} if not found
+     */
+    boolean getBoolean(String name, boolean defaultValue);
+
+    /**
+     * Returns the value for the specified parameter as a {@code Boolean}.
+     * @param key the parameter definition
+     * @return the value as a {@code Boolean}, or {@code null} if the parameter does not exist
+     */
+    Boolean getBoolean(ParameterKey key);
+
+    /**
+     * Returns the value for the specified parameter as a {@code boolean}.
+     * @param key the parameter definition
+     * @param defaultValue the default value to return if the parameter does not exist
+     * @return the value as a {@code boolean}, or {@code defaultValue} if not found
+     */
+    boolean getBoolean(ParameterKey key, boolean defaultValue);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link Boolean} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as an array of {@link Boolean} instances, or {@code null}
+     */
+    Boolean[] getBooleanArray(String name);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link Boolean} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as an array of {@link Boolean} instances, or {@code null}
+     */
+    Boolean[] getBooleanArray(ParameterKey key);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Boolean} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param name the parameter name
+     * @return the value for the specified parameter as a list of {@link Boolean} instances, or {@code null}
+     */
+    List<Boolean> getBooleanList(String name);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Boolean} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param key the parameter definition
+     * @return the value for the specified parameter as a list of {@link Boolean} instances, or {@code null}
+     */
+    List<Boolean> getBooleanList(ParameterKey key);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Parameters} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param <T> the type parameter
+     * @param name the parameter name
+     * @return the value for the specified parameter as a list of {@link Parameters} instances, or {@code null}
+     */
+    <T extends Parameters> T getParameters(String name);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Parameters} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param <T> the type parameter
+     * @param key the parameter definition
+     * @return the value for the specified parameter as a list of {@link Parameters} instances, or {@code null}
+     */
+    <T extends Parameters> T getParameters(ParameterKey key);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link Parameters} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param <T> the type parameter
+     * @param name the parameter name
+     * @return the value for the specified parameter as an array of {@link Parameters} instances, or {@code null}
+     */
+    <T extends Parameters> T[] getParametersArray(String name);
+
+    /**
+     * Return the value for the specified parameter as an array of {@link Parameters} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param <T> the type parameter
+     * @param key the parameter definition
+     * @return the value for the specified parameter as an array of {@link Parameters} instances, or {@code null}
+     */
+    <T extends Parameters> T[] getParametersArray(ParameterKey key);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Parameters} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param <T> the type parameter
+     * @param name the parameter name
+     * @return the value for the specified parameter as a list of {@link Parameters} instances, or {@code null}
+     */
+    <T extends Parameters> List<T> getParametersList(String name);
+
+    /**
+     * Return the value for the specified parameter as a list of {@link Parameters} instances,
+     * or {@code null} if the parameter does not exist.
+     * @param <T> the type parameter
+     * @param key the parameter definition
+     * @return the value for the specified parameter as a list of {@link Parameters} instances, or {@code null}
+     */
+    <T extends Parameters> List<T> getParametersList(ParameterKey key);
 
     /**
      * Populate this container by parsing APON text.

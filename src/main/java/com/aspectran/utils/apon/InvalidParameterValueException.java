@@ -15,7 +15,6 @@
  */
 package com.aspectran.utils.apon;
 
-
 /**
  * Thrown to indicate that a value cannot be assigned to a parameter due to
  * type or format incompatibility.

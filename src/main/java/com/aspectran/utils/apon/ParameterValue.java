@@ -46,7 +46,7 @@ public class ParameterValue implements Parameter {
 
     private boolean valueTypeHinted;
 
-    private Class<? extends AbstractParameters> parametersClass;
+    private Class<? extends DefaultParameters> parametersClass;
 
     private boolean array;
 
@@ -54,7 +54,7 @@ public class ParameterValue implements Parameter {
 
     private volatile Object value;
 
-    private List<Object> list;
+    private List<Object> valueList;
 
     private boolean assigned;
 
@@ -82,10 +82,10 @@ public class ParameterValue implements Parameter {
      * @param name the parameter name (not null)
      * @param valueType the declared value type (not null)
      * @param array whether this parameter can hold multiple values (array)
-     * @param noBracket if {@code true}, arrays are not represented with square brackets in APON
+     * @param noBrackets if {@code true}, arrays are not represented with square brackets in APON
      */
-    public ParameterValue(String name, ValueType valueType, boolean array, boolean noBracket) {
-        this(name, valueType, array, noBracket, false);
+    public ParameterValue(String name, ValueType valueType, boolean array, boolean noBrackets) {
+        this(name, valueType, array, noBrackets, false);
     }
 
     /**
@@ -93,73 +93,41 @@ public class ParameterValue implements Parameter {
      * @param name the parameter name (not null)
      * @param valueType the declared value type (not null)
      * @param array whether this parameter can hold multiple values (array)
-     * @param noBracket if {@code true}, arrays are not represented with square brackets in APON
+     * @param noBrackets if {@code true}, arrays are not represented with square brackets in APON
      * @param valueTypeFixed whether the value type is fixed (non-adjustable)
      */
-    protected ParameterValue(String name, ValueType valueType, boolean array,
-                             boolean noBracket, boolean valueTypeFixed) {
+    protected ParameterValue(
+            String name, ValueType valueType, boolean array, boolean noBrackets, boolean valueTypeFixed) {
+        this(name, valueType, null, array, noBrackets, valueTypeFixed);
+    }
+
+    /**
+     * Full constructor used internally to optionally fix the value type.
+     * @param name the parameter name (not null)
+     * @param valueType the declared value type (not null)
+     * @param parametersClass the Parameters implementation for nested values
+     * @param array whether this parameter can hold multiple values (array)
+     * @param noBrackets if {@code true}, arrays are not represented with square brackets in APON
+     * @param valueTypeFixed whether the value type is fixed (non-adjustable)
+     */
+    protected ParameterValue(
+            String name, ValueType valueType, Class<? extends DefaultParameters> parametersClass,
+            boolean array, boolean noBrackets, boolean valueTypeFixed) {
         Assert.notNull(name, "Parameter name must not be null");
         Assert.notNull(valueType, "Parameter value type must not be null");
+        if (parametersClass != null && valueType != ValueType.PARAMETERS) {
+            throw new IllegalArgumentException("Parameter value type must be PARAMETERS");
+        }
         this.name = name;
         this.valueType = valueType;
         this.originValueType = valueType;
-        this.array = array;
         this.valueTypeFixed = (valueTypeFixed && valueType != ValueType.VARIABLE);
-        if (this.array && !noBracket) {
-            this.bracketed = true;
-        }
-    }
-
-    /**
-     * Create a parameter that holds nested {@link Parameters} of the given class.
-     * @param name the parameter name (not null)
-     * @param parametersClass the concrete Parameters implementation for nested values (not null)
-     */
-    public ParameterValue(String name, Class<? extends AbstractParameters> parametersClass) {
-        this(name, parametersClass, false);
-    }
-
-    /**
-     * Create a nested-parameters parameter with an explicit array flag.
-     * @param name the parameter name (not null)
-     * @param parametersClass the Parameters implementation for nested values (not null)
-     * @param array whether multiple nested elements are allowed
-     */
-    public ParameterValue(String name, Class<? extends AbstractParameters> parametersClass,
-                          boolean array) {
-        this(name, parametersClass, array, false);
-    }
-
-    /**
-     * Create a nested-parameters parameter with array and bracket formatting controls.
-     * @param name the parameter name (not null)
-     * @param parametersClass the Parameters implementation for nested values (not null)
-     * @param array whether multiple nested elements are allowed
-     * @param noBracket if {@code true}, arrays are not represented with square brackets in APON
-     */
-    public ParameterValue(String name, Class<? extends AbstractParameters> parametersClass,
-                          boolean array, boolean noBracket) {
-        this(name, parametersClass, array, noBracket, false);
-    }
-
-    /**
-     * Full constructor used internally for nested-parameters parameters.
-     * @param name the parameter name (not null)
-     * @param parametersClass the Parameters implementation for nested values (not null)
-     * @param array whether multiple nested elements are allowed
-     * @param noBracket if {@code true}, arrays are not represented with square brackets in APON
-     * @param valueTypeFixed whether the value type is fixed (non-adjustable)
-     */
-    protected ParameterValue(String name, Class<? extends AbstractParameters> parametersClass,
-                             boolean array, boolean noBracket, boolean valueTypeFixed) {
-        this.name = name;
-        this.valueType = ValueType.PARAMETERS;
-        this.originValueType = valueType;
         this.parametersClass = parametersClass;
-        this.array = array;
-        this.valueTypeFixed = valueTypeFixed;
-        if (this.array && !noBracket) {
-            this.bracketed = true;
+        if (array) {
+            arraylize();
+            if (noBrackets) {
+                setBracketed(false);
+            }
         }
     }
 
@@ -172,9 +140,9 @@ public class ParameterValue implements Parameter {
     }
 
     /**
-         * Set the container that owns this parameter (internal use).
-         */
-        public void setContainer(Parameters container) {
+     * Set the container that owns this parameter (internal use).
+     */
+    public void setContainer(Parameters container) {
         this.container = container;
     }
 
@@ -241,6 +209,11 @@ public class ParameterValue implements Parameter {
         this.valueTypeHinted = valueTypeHinted;
     }
 
+    @Override
+    public Class<? extends DefaultParameters> getParametersClass() {
+        return parametersClass;
+    }
+
     /**
      * Whether this parameter holds multiple values.
      */
@@ -258,43 +231,10 @@ public class ParameterValue implements Parameter {
     }
 
     /**
-         * Control whether array values are emitted with square brackets.
-         */
-        public void setBracketed(boolean bracketed) {
+     * Control whether array values are emitted with square brackets.
+     */
+    public void setBracketed(boolean bracketed) {
         this.bracketed = bracketed;
-    }
-
-    /**
-     * Whether any value (including null) has been assigned to this parameter.
-     */
-    @Override
-    public boolean isAssigned() {
-        return assigned;
-    }
-
-    /**
-     * Whether a non-null value is present.
-     */
-    @Override
-    public boolean hasValue() {
-        if (assigned) {
-            if (array) {
-                return (list != null);
-            } else {
-                return (value != null);
-            }
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Return the number of elements when this parameter is in array form.
-     */
-    @Override
-    public int getArraySize() {
-        List<?> list = getValueList();
-        return (list != null ? list.size() : 0);
     }
 
     /**
@@ -312,9 +252,38 @@ public class ParameterValue implements Parameter {
                 "an array type because it is already an array type");
         array = true;
         bracketed = true;
+        valueList = new ArrayList<Object>();
         if (assigned) {
             addValue(value);
             value = null;
+        }
+    }
+
+    /**
+     * Whether any value (including null) has been assigned to this parameter.
+     */
+    @Override
+    public boolean isAssigned() {
+        return assigned;
+    }
+
+    public void touchValue() {
+        assigned = true;
+    }
+
+    /**
+     * Whether a non-null value is present.
+     */
+    @Override
+    public boolean hasValue() {
+        if (assigned) {
+            if (array) {
+                return (valueList != null && !valueList.isEmpty());
+            } else {
+                return (value != null);
+            }
+        } else {
+            return false;
         }
     }
 
@@ -333,11 +302,8 @@ public class ParameterValue implements Parameter {
             }
         }
         if (!valueTypeFixed && !array && assigned) {
-            addValue(this.value);
+            arraylize();
             addValue(value);
-            this.value = null;
-            array = true;
-            bracketed = true;
         } else {
             if (array) {
                 addValue(value);
@@ -349,11 +315,9 @@ public class ParameterValue implements Parameter {
     }
 
     private void addValue(Object value) {
-        if (list == null) {
-            list = new ArrayList<Object>();
-            assigned = true;
-        }
-        list.add(value);
+        Assert.state(valueList != null, "No list has been set");
+        valueList.add(value);
+        assigned = true;
     }
 
     /**
@@ -362,13 +326,14 @@ public class ParameterValue implements Parameter {
      */
     @Override
     public void removeValue() {
-        value = null;
-        list = null;
-        assigned = false;
-        if (!valueTypeFixed) {
-            array = false;
-            bracketed = false;
+        if (array) {
+            if (valueList != null) {
+                valueList.clear();
+            }
+        } else {
+            value = null;
         }
+        assigned = false;
     }
 
     /**
@@ -389,21 +354,10 @@ public class ParameterValue implements Parameter {
      */
     @Override
     public List<?> getValueList() {
-        if (!valueTypeFixed && value != null && list == null &&
-                originValueType == ValueType.VARIABLE) {
-            addValue(value);
+        if (!valueTypeFixed && !array && assigned && originValueType == ValueType.VARIABLE) {
+            arraylize();
         }
-        return list;
-    }
-
-    /**
-     * Return the values as an Object array if this parameter is in array form.
-     * @return an array of values or {@code null} if no values exist
-     */
-    @Override
-    public Object[] getValues() {
-        List<?> list = getValueList();
-        return (list != null ? list.toArray(new Object[0]) : null);
+        return valueList;
     }
 
     /**
@@ -441,16 +395,12 @@ public class ParameterValue implements Parameter {
      * @return the list of strings or {@code null}
      */
     @Override
-    @SuppressWarnings("unchecked")
     public List<String> getValueAsStringList() {
-        if (valueType == ValueType.STRING) {
-            return (List<String>)getValueList();
-        }
         List<?> list1 = getValueList();
         if (list1 != null) {
-            List<String> list2 = new ArrayList<String>();
+            List<String> list2 = new ArrayList<String>(list1.size());
             for (Object o : list1) {
-                list2.add(o.toString());
+                list2.add(o != null ? o.toString() : null);
             }
             return list2;
         } else {
@@ -466,7 +416,13 @@ public class ParameterValue implements Parameter {
     @Override
     public Integer getValueAsInt() {
         checkValueType(ValueType.INT);
-        return (Integer)value;
+        if (value == null) {
+            return null;
+        } else if (value instanceof Integer) {
+            return (Integer)value;
+        } else {
+            return Integer.valueOf(value.toString());
+        }
     }
 
     /**
@@ -486,10 +442,28 @@ public class ParameterValue implements Parameter {
      * @throws IncompatibleValueTypeException if this parameter is not of INT type (and not VARIABLE)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public List<Integer> getValueAsIntList() {
         checkValueType(ValueType.INT);
-        return (List<Integer>)getValueList();
+        List<?> list1 = getValueList();
+        if (list1 != null) {
+            List<Integer> list2 = new ArrayList<Integer>(list1.size());
+            for (Object o : list1) {
+                if (o == null) {
+                    list2.add(null);
+                } else if (o instanceof Integer) {
+                    list2.add((Integer)o);
+                } else {
+                    try {
+                        list2.add(Integer.valueOf(o.toString()));
+                    } catch (NumberFormatException e) {
+                        throw new ValueTypeMismatchException(o.getClass(), Integer.class, e);
+                    }
+                }
+            }
+            return list2;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -500,7 +474,13 @@ public class ParameterValue implements Parameter {
     @Override
     public Long getValueAsLong() {
         checkValueType(ValueType.LONG);
-        return (Long)value;
+        if (value == null) {
+            return null;
+        } else if (value instanceof Long) {
+            return (Long)value;
+        } else {
+            return Long.valueOf(value.toString());
+        }
     }
 
     /**
@@ -520,10 +500,28 @@ public class ParameterValue implements Parameter {
      * @throws IncompatibleValueTypeException if this parameter is not of LONG type (and not VARIABLE)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public List<Long> getValueAsLongList() {
         checkValueType(ValueType.LONG);
-        return (List<Long>)getValueList();
+        List<?> list1 = getValueList();
+        if (list1 != null) {
+            List<Long> list2 = new ArrayList<Long>(list1.size());
+            for (Object o : list1) {
+                if (o == null) {
+                    list2.add(null);
+                } else if (o instanceof Long) {
+                    list2.add((Long)o);
+                } else {
+                    try {
+                        list2.add(Long.valueOf(o.toString()));
+                    } catch (NumberFormatException e) {
+                        throw new ValueTypeMismatchException(o.getClass(), Long.class, e);
+                    }
+                }
+            }
+            return list2;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -534,7 +532,13 @@ public class ParameterValue implements Parameter {
     @Override
     public Float getValueAsFloat() {
         checkValueType(ValueType.FLOAT);
-        return (Float)value;
+        if (value == null) {
+            return null;
+        } else if (value instanceof Float) {
+            return (Float)value;
+        } else {
+            return Float.valueOf(value.toString());
+        }
     }
 
     /**
@@ -554,10 +558,28 @@ public class ParameterValue implements Parameter {
      * @throws IncompatibleValueTypeException if this parameter is not of FLOAT type (and not VARIABLE)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public List<Float> getValueAsFloatList() {
         checkValueType(ValueType.FLOAT);
-        return (List<Float>)getValueList();
+        List<?> list1 = getValueList();
+        if (list1 != null) {
+            List<Float> list2 = new ArrayList<Float>(list1.size());
+            for (Object o : list1) {
+                if (o == null) {
+                    list2.add(null);
+                } else if (o instanceof Float) {
+                    list2.add((Float)o);
+                } else {
+                    try {
+                        list2.add(Float.valueOf(o.toString()));
+                    } catch (NumberFormatException e) {
+                        throw new ValueTypeMismatchException(o.getClass(), Float.class, e);
+                    }
+                }
+            }
+            return list2;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -568,7 +590,13 @@ public class ParameterValue implements Parameter {
     @Override
     public Double getValueAsDouble() {
         checkValueType(ValueType.DOUBLE);
-        return (Double)value;
+        if (value == null) {
+            return null;
+        } else if (value instanceof Double) {
+            return (Double)value;
+        } else {
+            return Double.valueOf(value.toString());
+        }
     }
 
     /**
@@ -588,10 +616,28 @@ public class ParameterValue implements Parameter {
      * @throws IncompatibleValueTypeException if this parameter is not of DOUBLE type (and not VARIABLE)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public List<Double> getValueAsDoubleList() {
         checkValueType(ValueType.DOUBLE);
-        return (List<Double>)getValueList();
+        List<?> list1 = getValueList();
+        if (list1 != null) {
+            List<Double> list2 = new ArrayList<Double>(list1.size());
+            for (Object o : list1) {
+                if (o == null) {
+                    list2.add(null);
+                } else if (o instanceof Double) {
+                    list2.add((Double)o);
+                } else {
+                    try {
+                        list2.add(Double.valueOf(o.toString()));
+                    } catch (NumberFormatException e) {
+                        throw new ValueTypeMismatchException(o.getClass(), Double.class, e);
+                    }
+                }
+            }
+            return list2;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -602,7 +648,13 @@ public class ParameterValue implements Parameter {
     @Override
     public Boolean getValueAsBoolean() {
         checkValueType(ValueType.BOOLEAN);
-        return (Boolean)value;
+        if (value == null) {
+            return null;
+        } else if (value instanceof Boolean) {
+            return (Boolean)value;
+        } else {
+            return Boolean.valueOf(value.toString());
+        }
     }
 
     /**
@@ -622,10 +674,24 @@ public class ParameterValue implements Parameter {
      * @throws IncompatibleValueTypeException if this parameter is not of BOOLEAN type (and not VARIABLE)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public List<Boolean> getValueAsBooleanList() {
         checkValueType(ValueType.BOOLEAN);
-        return (List<Boolean>)getValueList();
+        List<?> list1 = getValueList();
+        if (list1 != null) {
+            List<Boolean> list2 = new ArrayList<Boolean>(list1.size());
+            for (Object o : list1) {
+                if (o == null) {
+                    list2.add(null);
+                } else if (o instanceof Boolean) {
+                    list2.add((Boolean)o);
+                } else {
+                    list2.add(Boolean.valueOf(o.toString()));
+                }
+            }
+            return list2;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -636,7 +702,13 @@ public class ParameterValue implements Parameter {
     @Override
     public Parameters getValueAsParameters() {
         checkValueType(ValueType.PARAMETERS);
-        return (Parameters)value;
+        if (value == null) {
+            return null;
+        } else if (value instanceof Parameters) {
+            return (Parameters)value;
+        } else {
+            throw new ValueTypeMismatchException(value.getClass(), Parameters.class);
+        }
     }
 
     /**
@@ -656,26 +728,57 @@ public class ParameterValue implements Parameter {
      * @throws IncompatibleValueTypeException if this parameter is not of PARAMETERS type (and not VARIABLE)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public List<Parameters> getValueAsParametersList() {
-        if (valueType != ValueType.PARAMETERS) {
-            throw new IncompatibleValueTypeException(this, ValueType.PARAMETERS);
+        checkValueType(ValueType.PARAMETERS);
+        List<?> list1 = getValueList();
+        if (list1 != null) {
+            List<Parameters> list2 = new ArrayList<Parameters>(list1.size());
+            for (Object o : list1) {
+                if (o == null) {
+                    list2.add(null);
+                } else if (o instanceof Parameters) {
+                    list2.add((Parameters)o);
+                } else {
+                    throw new ValueTypeMismatchException(o.getClass(), Parameters.class);
+                }
+            }
+            return list2;
+        } else {
+            return null;
         }
-        return (List<Parameters>)getValueList();
     }
 
     /**
-     * Create and attach a new nested {@link Parameters} instance under this parameter.
-     * If the current type is VARIABLE, it is treated as PARAMETERS and a VariableParameters implementation is used by default.
+     * Creates a new nested {@link Parameters} instance and attaches it as the value of this parameter.
+     * If the current type is VARIABLE, it is treated as PARAMETERS and a {@link VariableParameters} implementation is used by default.
+     * This method ensures that the newly created {@link Parameters} instance becomes the value of this {@code ParameterValue}.
      * @param <T> the type of nested container to return
      * @param identifier the parameter metadata/owner used to set the proprietor of the nested container
-     * @return the created nested container instance
+     * @return the created and attached nested container instance
+     * @throws IncompatibleValueTypeException if the declared type is not PARAMETERS (nor VARIABLE)
+     * @throws InvalidParameterValueException if instantiation of the nested container fails
+     */
+    @Override
+    public <T extends Parameters> T attachParameters(Parameter identifier) {
+        T ps = createParameters(identifier);
+        putValue(ps);
+        return ps;
+    }
+
+    /**
+     * Creates a new nested {@link Parameters} instance without attaching it as the value of this parameter.
+     * If the current type is VARIABLE, it is treated as PARAMETERS and a {@link VariableParameters} implementation is used by default.
+     * This method is responsible only for the instantiation and basic setup (like setting the proprietor)
+     * of the nested {@link Parameters} instance.
+     * @param <T> the type of nested container to return
+     * @param identifier the parameter metadata/owner used to set the proprietor of the nested container
+     * @return the newly created nested container instance
      * @throws IncompatibleValueTypeException if the declared type is not PARAMETERS (nor VARIABLE)
      * @throws InvalidParameterValueException if instantiation of the nested container fails
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends Parameters> T newParameters(Parameter identifier) {
+    public <T extends Parameters> T createParameters(Parameter identifier) {
         if (valueType == ValueType.VARIABLE) {
             valueType = ValueType.PARAMETERS;
             parametersClass = VariableParameters.class;
@@ -688,7 +791,6 @@ public class ParameterValue implements Parameter {
         try {
             T ps = (T)ClassUtils.createInstance(parametersClass);
             ps.setProprietor(identifier);
-            putValue(ps);
             return ps;
         } catch (Exception e) {
             throw new InvalidParameterValueException("Failed to instantiate " + parametersClass, e);
@@ -779,9 +881,10 @@ public class ParameterValue implements Parameter {
         ToStringBuilder tsb = new ToStringBuilder();
         tsb.append("name", name);
         tsb.append("valueType", valueType);
-        tsb.append("array", array);
-        if (array) {
-            tsb.append("arraySize", getArraySize());
+        tsb.appendForce("assigned", assigned);
+        tsb.appendForce("array", array);
+        if (array && valueList != null) {
+            tsb.append("size", valueList.size());
         }
         tsb.append("bracketed", bracketed);
         tsb.append("qualifiedName", getQualifiedName());

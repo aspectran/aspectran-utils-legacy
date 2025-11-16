@@ -15,7 +15,6 @@
  */
 package com.aspectran.utils.apon;
 
-
 /**
  * Thrown when a closing bracket is missing for a block/array/text value while parsing APON.
  */
