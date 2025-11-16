@@ -35,7 +35,7 @@ import java.util.Map;
  * <p>
  * Supports {@link Map}, JavaBean-style objects (via reflection), collections,
  * arrays, and common primitives/wrappers. Dates and time types can be formatted
- * through an optional {@link com.aspectran.utils.StringifyContext}.
+ * through an optional {@link StringifyContext}.
  * </p>
  */
 public class ObjectToParameters {
@@ -57,7 +57,7 @@ public class ObjectToParameters {
      * @param requiredType the concrete Parameters implementation to instantiate (not null)
      * @throws IllegalArgumentException if {@code requiredType} is null
      */
-    public ObjectToParameters(final Class<? extends Parameters> requiredType) {
+    public ObjectToParameters(Class<? extends Parameters> requiredType) {
         Assert.notNull(requiredType, "requiredType must not be null");
         this.requiredType = requiredType;
     }
@@ -83,7 +83,7 @@ public class ObjectToParameters {
 
     /**
      * Convert the given object into a new {@link Parameters} container.
-     * For {@link java.util.Map} inputs, entries are copied as-is; for beans, readable
+     * For {@link Map} inputs, entries are copied as-is; for beans, readable
      * properties are reflected and added.
      * @param <T> the container type
      * @param object the source object (not null)
@@ -190,7 +190,8 @@ public class ObjectToParameters {
     protected void putValue(@NonNull Parameters container, Object value) {
         Object obj = normalize(value);
         if (obj instanceof Parameters) {
-            container.putAll((Parameters)obj);
+            Parameters parameters = (Parameters)obj;
+            container.mergeParameterValues(parameters);
         }
     }
 

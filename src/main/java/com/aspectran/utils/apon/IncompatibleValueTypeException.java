@@ -15,6 +15,8 @@
  */
 package com.aspectran.utils.apon;
 
+import com.aspectran.utils.annotation.jsr305.NonNull;
+
 /**
  * Thrown when the actual value type of a parameter does not match the expected type.
  * <p>This exception is typically raised while parsing or validating APON values when a
@@ -26,15 +28,16 @@ public class IncompatibleValueTypeException extends InvalidParameterValueExcepti
     private static final long serialVersionUID = 1557599183505068164L;
 
     /**
-     * Thrown when the actual value type of a parameter does not match the expected type.
-     * <p>This exception is typically raised while parsing or validating APON values when a
-     * {@link ParameterValue} is provided in a form that is incompatible with the declared
-     * {@link ValueType}.</p>
+     * Creates a new exception indicating that the value held by the given parameter
+     * is incompatible with the expected value type.
+     * @param parameterValue the parameter value that caused the mismatch
+     * @param expectedValueType the expected value type
      */
     public IncompatibleValueTypeException(ParameterValue parameterValue, ValueType expectedValueType) {
         super(buildMessage(parameterValue, expectedValueType));
     }
 
+    @NonNull
     private static String buildMessage(ParameterValue parameterValue, ValueType expectedValueType) {
         String paramName = (parameterValue != null ? parameterValue.getQualifiedName() : null);
         ValueType actualType = (parameterValue != null ? parameterValue.getValueType() : null);

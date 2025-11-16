@@ -397,11 +397,10 @@ public class JsonReader {
                     checkLenient();
                     return peeked = PEEKED_SINGLE_QUOTED_NAME;
                 case '}':
-                    if (peekStack != NONEMPTY_OBJECT) {
-                        return peeked = PEEKED_END_OBJECT;
-                    } else {
-                        throw syntaxError("Expected name");
+                    if (peekStack == NONEMPTY_OBJECT) {
+                        checkLenient(); // Allow trailing comma
                     }
+                    return peeked = PEEKED_END_OBJECT;
                 default:
                     checkLenient();
                     pos--; // Don't consume the first character in an unquoted string.
@@ -1296,7 +1295,7 @@ public class JsonReader {
 
     private void checkLenient() throws IOException {
         if (!lenient) {
-            throw syntaxError("Use JsonReader.setLenient(true) to accept malformed JSON");
+            throw syntaxError("Malformed JSON: Use JsonReader.setLenient(true) to accept malformed JSON");
         }
     }
 

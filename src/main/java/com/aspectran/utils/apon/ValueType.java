@@ -100,15 +100,15 @@ public enum ValueType {
 
     /**
      * Extract and resolve a type hint embedded in a parameter name, e.g.,
-     * {@code name(int)} -&gt; {@link #INT}.
+     * {@code name(int)} -> {@link #INT}.
      * @param name the parameter name possibly containing a type hint
      * @return the hinted {@link ValueType}, or {@code null} if no valid hint
      */
     @Nullable
     public static ValueType resolveByHint(@NonNull String name) {
-        int start = name.indexOf(AponFormat.ROUND_BRACKET_OPEN);
+        int start = name.indexOf(AponFormat.TEXT_OPEN);
         if (start > 0) {
-            int end = name.indexOf(AponFormat.ROUND_BRACKET_CLOSE);
+            int end = name.indexOf(AponFormat.TEXT_CLOSE);
             if (end > start) {
                 String hintedType = name.substring(start + 1, end);
                 return resolve(hintedType);
@@ -125,7 +125,7 @@ public enum ValueType {
      */
     @NonNull
     public static String stripHint(@NonNull String name) {
-        int hintStartIndex = name.indexOf(AponFormat.ROUND_BRACKET_OPEN);
+        int hintStartIndex = name.indexOf(AponFormat.TEXT_OPEN);
         if (hintStartIndex > 0) {
             return name.substring(0, hintStartIndex);
         }

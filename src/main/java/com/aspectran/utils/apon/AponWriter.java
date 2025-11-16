@@ -29,25 +29,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.List;
 
-import static com.aspectran.utils.apon.AponFormat.COMMENT_LINE_START;
-import static com.aspectran.utils.apon.AponFormat.CURLY_BRACKET_CLOSE;
-import static com.aspectran.utils.apon.AponFormat.CURLY_BRACKET_OPEN;
-import static com.aspectran.utils.apon.AponFormat.DEFAULT_INDENT_STRING;
-import static com.aspectran.utils.apon.AponFormat.DOUBLE_QUOTE_CHAR;
-import static com.aspectran.utils.apon.AponFormat.ESCAPE_CHAR;
-import static com.aspectran.utils.apon.AponFormat.NAME_VALUE_SEPARATOR;
-import static com.aspectran.utils.apon.AponFormat.NEW_LINE;
-import static com.aspectran.utils.apon.AponFormat.NEW_LINE_CHAR;
-import static com.aspectran.utils.apon.AponFormat.NULL;
-import static com.aspectran.utils.apon.AponFormat.ROUND_BRACKET_CLOSE;
-import static com.aspectran.utils.apon.AponFormat.ROUND_BRACKET_OPEN;
-import static com.aspectran.utils.apon.AponFormat.SINGLE_QUOTE_CHAR;
-import static com.aspectran.utils.apon.AponFormat.SPACE;
-import static com.aspectran.utils.apon.AponFormat.SPACE_CHAR;
-import static com.aspectran.utils.apon.AponFormat.SQUARE_BRACKET_CLOSE;
-import static com.aspectran.utils.apon.AponFormat.SQUARE_BRACKET_OPEN;
-import static com.aspectran.utils.apon.AponFormat.SYSTEM_NEW_LINE;
-import static com.aspectran.utils.apon.AponFormat.TEXT_LINE_START;
+import static com.aspectran.utils.apon.AponFormat.*;
 
 /**
  * A streaming writer that serializes {@link Parameters} into APON (Aspectran Parameters
@@ -74,6 +56,8 @@ public class AponWriter implements Flushable {
     private boolean autoFlush;
 
     private int indentDepth;
+
+    private boolean currentCompactStyle;
 
     /**
      * Creates a new AponWriter that writes to an in-memory {@link StringWriter}.
@@ -241,222 +225,6 @@ public class AponWriter implements Flushable {
     }
 
     /**
-     * Writes a {@link Parameters} object to the character-output stream.
-     * @param parameters the {@code Parameters} object to serialize
-     * @return this writer for chaining
-     * @throws IOException if an I/O error occurs
-     */
-    @SuppressWarnings("unchecked")
-    public <T extends AponWriter> T write(Parameters parameters) throws IOException {
-        Assert.notNull(parameters, "parameters must not be null");
-        if (parameters instanceof ArrayParameters) {
-            for (Parameters ps : ((ArrayParameters)parameters).getParametersList()) {
-                beginBlock();
-                for (Parameter pv : ps.getParameterValues()) {
-                    if (nullWritable || pv.isAssigned()) {
-                        write(pv);
-                    }
-                }
-                endBlock();
-            }
-        } else {
-            for (Parameter pv : parameters.getParameterValues()) {
-                if (nullWritable || pv.isAssigned()) {
-                    write(pv);
-                }
-            }
-        }
-        return (T)this;
-    }
-
-    /**
-     * Writes a {@link Parameter} object to the character-output stream.
-     * @param parameter the {@code Parameter} object to serialize
-     * @return this writer for chaining
-     * @throws IOException if an I/O error occurs
-     */
-    @SuppressWarnings("unchecked")
-    public <T extends AponWriter> T write(Parameter parameter) throws IOException {
-        Assert.notNull(parameter, "parameter must not be null");
-        if (parameter.getValueType() == ValueType.PARAMETERS) {
-            if (parameter.isArray()) {
-                List<Parameters> list = parameter.getValueAsParametersList();
-                if (list != null) {
-                    if (parameter.isBracketed()) {
-                        writeName(parameter);
-                        beginArray();
-                        for (Parameters ps : list) {
-                            indent();
-                            beginBlock();
-                            if (ps != null) {
-                                write(ps);
-                            }
-                            endBlock();
-                        }
-                        endArray();
-                    } else {
-                        for (Parameters ps : list) {
-                            if (ps != null) {
-                                writeName(parameter, ps.getActualName());
-                                beginBlock();
-                                write(ps);
-                                endBlock();
-                            }
-                        }
-                    }
-                }
-            } else {
-                Parameters ps = parameter.getValueAsParameters();
-                if (nullWritable || ps != null) {
-                    writeName(parameter, (ps != null ? ps.getActualName() : null));
-                    beginBlock();
-                    if (ps != null) {
-                        write(ps);
-                    }
-                    endBlock();
-                }
-            }
-        } else if (parameter.getValueType() == ValueType.VARIABLE) {
-            if (parameter.isArray()) {
-                List<?> list = parameter.getValueList();
-                if (list != null) {
-                    if (parameter.isBracketed()) {
-                        writeName(parameter);
-                        beginArray();
-                        for (Object value : list) {
-                            indent();
-                            if (value instanceof Parameters) {
-                                write((Parameters)value);
-                            } else if (value != null) {
-                                writeString(value.toString());
-                            } else {
-                                writeNull();
-                            }
-                        }
-                        endArray();
-                    } else {
-                        for (Object value : list) {
-                            writeName(parameter);
-                            if (value instanceof Parameters) {
-                                write((Parameters)value);
-                            } else if (value != null) {
-                                writeString(value.toString());
-                            } else {
-                                writeNull();
-                            }
-                        }
-                    }
-                }
-            } else {
-                Object value = parameter.getValue();
-                if (nullWritable || value != null) {
-                    writeName(parameter);
-                    if (value instanceof Parameters) {
-                        write((Parameters)value);
-                    } else if (value != null) {
-                        writeString(value.toString());
-                    } else {
-                        writeNull();
-                    }
-                }
-            }
-        } else if (parameter.getValueType() == ValueType.STRING) {
-            if (parameter.isArray()) {
-                List<String> list = parameter.getValueAsStringList();
-                if (list != null) {
-                    if (parameter.isBracketed()) {
-                        writeName(parameter);
-                        beginArray();
-                        for (String value : list) {
-                            indent();
-                            writeString(value);
-                        }
-                        endArray();
-                    } else {
-                        for (String value : list) {
-                            if (nullWritable || value != null) {
-                                writeName(parameter);
-                                writeString(value);
-                            }
-                        }
-                    }
-                }
-            } else {
-                String value = parameter.getValueAsString();
-                if (nullWritable || value != null) {
-                    writeName(parameter);
-                    writeString(value);
-                }
-            }
-        } else if (parameter.getValueType() == ValueType.TEXT) {
-            if (parameter.isArray()) {
-                List<String> list = parameter.getValueAsStringList();
-                if (list != null) {
-                    if (parameter.isBracketed()) {
-                        writeName(parameter);
-                        beginArray();
-                        for (String text : list) {
-                            indent();
-                            beginText();
-                            writeText(text);
-                            endText();
-                        }
-                        endArray();
-                    } else {
-                        for (String text : list) {
-                            if (nullWritable || text != null) {
-                                writeName(parameter);
-                                beginText();
-                                writeText(text);
-                                endText();
-                            }
-                        }
-                    }
-                }
-            } else {
-                String text = parameter.getValueAsString();
-                if (text != null) {
-                    writeName(parameter);
-                    beginText();
-                    writeText(text);
-                    endText();
-                } else if (nullWritable) {
-                    writeName(parameter);
-                    writeNull();
-                }
-            }
-        } else {
-            if (parameter.isArray()) {
-                List<?> list = parameter.getValueList();
-                if (list != null) {
-                    if (parameter.isBracketed()) {
-                        writeName(parameter);
-                        beginArray();
-                        for (Object value : list) {
-                            indent();
-                            write(value);
-                        }
-                        endArray();
-                    } else {
-                        for (Object value : list) {
-                            if (nullWritable || value != null) {
-                                writeName(parameter);
-                                write(value);
-                            }
-                        }
-                    }
-                }
-            } else {
-                if (nullWritable || parameter.getValue() != null) {
-                    writeName(parameter);
-                    write(parameter.getValue());
-                }
-            }
-        }
-        return (T)this;
-    }
-
-    /**
      * Writes a comment to the character-output stream.
      * If pretty-printing is enabled, each line of the comment will be prefixed
      * with the comment marker.
@@ -496,6 +264,249 @@ public class AponWriter implements Flushable {
         return (T)this;
     }
 
+    /**
+     * Writes a {@link Parameters} object to the character-output stream.
+     * @param parameters the {@code Parameters} object to serialize
+     * @return this writer for chaining
+     * @throws IOException if an I/O error occurs
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends AponWriter> T write(Parameters parameters) throws IOException {
+        Assert.notNull(parameters, "parameters must not be null");
+        this.currentCompactStyle = parameters.isCompactStyle();
+        if (parameters instanceof ArrayParameters) {
+            ArrayParameters array = (ArrayParameters)parameters;
+            writeArray(array);
+        } else {
+            if (parameters.isCompactStyle()) {
+                for (Parameter pv : parameters.getParameterValues()) {
+                    if (nullWritable || pv.isAssigned()) {
+                        write(pv);
+                    }
+                }
+            } else {
+                writeBlock(parameters);
+            }
+        }
+        return (T)this;
+    }
+
+    private void writeBlock(@NonNull Parameters parameters) throws IOException {
+        if (parameters.isEmpty()) {
+            emptyBlock();
+        } else {
+            beginBlock();
+            for (Parameter pv : parameters.getParameterValues()) {
+                if (nullWritable || pv.isAssigned()) {
+                    write(pv);
+                }
+            }
+            endBlock();
+        }
+    }
+
+    private void writeArray(@NonNull ArrayParameters parameters) throws IOException {
+        if (parameters.isEmpty()) {
+            emptyArray();
+        } else {
+            beginArray();
+            for (Object value : parameters) {
+                if (value instanceof Parameters) {
+                    Parameters ps = (Parameters)value;
+                    indent();
+                    beginBlock();
+                    for (Parameter pv : ps.getParameterValues()) {
+                        if (nullWritable || pv.isAssigned()) {
+                            write(pv);
+                        }
+                    }
+                    endBlock();
+                } else {
+                    indent();
+                    write(value);
+                }
+            }
+            endArray();
+        }
+    }
+
+    private void write(Parameter parameter) throws IOException {
+        Assert.notNull(parameter, "parameter must not be null");
+        if (parameter.getValueType() == ValueType.PARAMETERS || parameter.getValueType() == ValueType.VARIABLE) {
+            if (parameter.isArray()) {
+                List<?> list = parameter.getValueList();
+                if (list != null) {
+                    if (parameter.isBracketed()) {
+                        writeName(parameter);
+                        if (list.isEmpty()) {
+                            emptyArray();
+                        } else {
+                            beginArray();
+                            for (Object value : list) {
+                                if (nullWritable || value != null) {
+                                    indent();
+                                    if (value instanceof ArrayParameters) {
+                                        ArrayParameters ps = (ArrayParameters)value;
+                                        writeArray(ps);
+                                    } else if (value instanceof Parameters) {
+                                        Parameters ps = (Parameters)value;
+                                        writeBlock(ps);
+                                    } else if (value != null) {
+                                        writeString(value.toString());
+                                    } else {
+                                        writeNull();
+                                    }
+                                }
+                            }
+                            endArray();
+                        }
+                    } else {
+                        for (Object value : list) {
+                            if (nullWritable || value != null) {
+                                if (value instanceof ArrayParameters) {
+                                    ArrayParameters ps = (ArrayParameters)value;
+                                    writeName(parameter, ps.getActualName());
+                                    writeArray(ps);
+                                } else if (value instanceof Parameters) {
+                                    Parameters ps = (Parameters)value;
+                                    writeName(parameter, ps.getActualName());
+                                    writeBlock(ps);
+                                } else if (value != null) {
+                                    writeName(parameter);
+                                    writeString(value.toString());
+                                } else {
+                                    writeName(parameter);
+                                    writeNull();
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                Object value = parameter.getValue();
+                if (nullWritable || value != null) {
+                    if (value instanceof ArrayParameters) {
+                        ArrayParameters ps = (ArrayParameters)value;
+                        writeName(parameter, ps.getActualName());
+                        if (ps.isEmpty()) {
+                            emptyArray();
+                        } else {
+                            writeArray(ps);
+                        }
+                    } else if (value instanceof Parameters) {
+                        Parameters ps = (Parameters)value;
+                        writeName(parameter, ps.getActualName());
+                        writeBlock(ps);
+                    } else if (value != null) {
+                        writeName(parameter);
+                        writeString(value.toString());
+                    } else {
+                        writeName(parameter);
+                        writeNull();
+                    }
+                }
+            }
+        } else if (parameter.getValueType() == ValueType.TEXT) {
+            if (parameter.isArray()) {
+                List<String> list = parameter.getValueAsStringList();
+                if (list != null) {
+                    if (parameter.isBracketed()) {
+                        writeName(parameter);
+                        if (list.isEmpty()) {
+                            emptyArray();
+                        } else {
+                            beginArray();
+                            for (String text : list) {
+                                if (nullWritable || text != null) {
+                                    indent();
+                                    beginText();
+                                    writeText(text);
+                                    endText();
+                                }
+                            }
+                            endArray();
+                        }
+                    } else {
+                        for (String text : list) {
+                            if (nullWritable || text != null) {
+                                writeName(parameter);
+                                beginText();
+                                writeText(text);
+                                endText();
+                            }
+                        }
+                    }
+                }
+            } else {
+                String text = parameter.getValueAsString();
+                if (text != null) {
+                    writeName(parameter);
+                    beginText();
+                    writeText(text);
+                    endText();
+                } else if (nullWritable) {
+                    writeName(parameter);
+                    writeNull();
+                }
+            }
+        } else {
+            if (parameter.isArray()) {
+                List<?> list = parameter.getValueList();
+                if (list != null) {
+                    if (parameter.isBracketed()) {
+                        writeName(parameter);
+                        if (list.isEmpty()) {
+                            emptyArray();
+                        } else {
+                            beginArray();
+                            for (Object value : list) {
+                                if (nullWritable || value != null) {
+                                    indent();
+                                    write(value);
+                                }
+                            }
+                            endArray();
+                        }
+                    } else {
+                        for (Object value : list) {
+                            if (nullWritable || value != null) {
+                                writeName(parameter);
+                                write(value);
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (nullWritable || parameter.getValue() != null) {
+                    writeName(parameter);
+                    write(parameter.getValue());
+                }
+            }
+        }
+    }
+
+    private void write(Object value) throws IOException {
+        if (value != null) {
+            if (value instanceof List<?>) {
+                List<?> list = (List<?>)value;
+                if (list.isEmpty()) {
+                    emptyArray();
+                } else {
+                    beginArray();
+                    for (Object obj : list) {
+                        indent();
+                        write(obj);
+                    }
+                    endArray();
+                }
+            } else {
+                writeString(value.toString());
+            }
+        } else {
+            writeNull();
+        }
+    }
+
     private void writeName(Parameter parameter) throws IOException {
         writeName(parameter, null);
     }
@@ -504,9 +515,9 @@ public class AponWriter implements Flushable {
         indent();
         writer.write(actualName != null ? actualName : parameter.getName());
         if (valueTypeHintEnabled || parameter.isValueTypeHinted()) {
-            writer.write(ROUND_BRACKET_OPEN);
+            writer.write(TEXT_OPEN);
             writer.write(parameter.getValueType().toString());
-            writer.write(ROUND_BRACKET_CLOSE);
+            writer.write(TEXT_CLOSE);
         }
         writer.write(NAME_VALUE_SEPARATOR);
         if (prettyPrint) {
@@ -525,13 +536,9 @@ public class AponWriter implements Flushable {
             newLine();
             return;
         }
-        if (value.indexOf(DOUBLE_QUOTE_CHAR) >= 0 ||
-                value.indexOf(SINGLE_QUOTE_CHAR) >= 0 ||
-                value.startsWith(SPACE) ||
-                value.endsWith(SPACE) ||
-                value.contains(NEW_LINE)) {
+        if (AponFormat.needsQuoting(value)) {
             writer.write(DOUBLE_QUOTE_CHAR);
-            writer.write(escape(value));
+            writer.write(AponFormat.escape(value));
             writer.write(DOUBLE_QUOTE_CHAR);
         } else {
             writer.write(value);
@@ -561,22 +568,13 @@ public class AponWriter implements Flushable {
         }
     }
 
-    private void write(Object value) throws IOException {
-        if (value != null) {
-            writer.write(value.toString());
-            newLine();
-        } else {
-            writeNull();
-        }
-    }
-
     private void writeNull() throws IOException {
         writer.write(NULL);
         newLine();
     }
 
     private void beginBlock() throws IOException {
-        writer.write(CURLY_BRACKET_OPEN);
+        writer.write(BLOCK_OPEN);
         newLine();
         increaseIndent();
     }
@@ -584,12 +582,22 @@ public class AponWriter implements Flushable {
     private void endBlock() throws IOException {
         decreaseIndent();
         indent();
-        writer.write(CURLY_BRACKET_CLOSE);
+        writer.write(BLOCK_CLOSE);
         newLine();
     }
 
+    private void emptyBlock() throws IOException {
+        if (currentCompactStyle) {
+            writer.write(EMPTY_BLOCK);
+            newLine();
+        } else {
+            beginBlock();
+            endBlock();
+        }
+    }
+
     private void beginArray() throws IOException {
-        writer.write(SQUARE_BRACKET_OPEN);
+        writer.write(ARRAY_OPEN);
         newLine();
         increaseIndent();
     }
@@ -597,12 +605,22 @@ public class AponWriter implements Flushable {
     private void endArray() throws IOException {
         decreaseIndent();
         indent();
-        writer.write(SQUARE_BRACKET_CLOSE);
+        writer.write(ARRAY_CLOSE);
         newLine();
     }
 
+    private void emptyArray() throws IOException {
+        if (currentCompactStyle) {
+            writer.write(EMPTY_ARRAY);
+            newLine();
+        } else {
+            beginArray();
+            endArray();
+        }
+    }
+
     private void beginText() throws IOException {
-        writer.write(ROUND_BRACKET_OPEN);
+        writer.write(TEXT_OPEN);
         newLine();
         increaseIndent();
     }
@@ -610,7 +628,7 @@ public class AponWriter implements Flushable {
     private void endText() throws IOException {
         decreaseIndent();
         indent();
-        writer.write(ROUND_BRACKET_CLOSE);
+        writer.write(TEXT_CLOSE);
         newLine();
     }
 
@@ -694,59 +712,6 @@ public class AponWriter implements Flushable {
     @Override
     public String toString() {
         return writer.toString();
-    }
-
-    /**
-     * Escapes characters in a {@code String} to be APON-compliant.
-     * @param str the string to escape, may be null
-     * @return the escaped string, or null if the input was null
-     */
-    public static String escape(String str) {
-        if (str == null) {
-            return null;
-        }
-
-        int len = str.length();
-        if (len == 0) {
-            return str;
-        }
-
-        StringBuilder sb = new StringBuilder(len);
-        char c;
-        String t;
-        for (int pos = 0; pos < len; pos++) {
-            c = str.charAt(pos);
-            switch (c) {
-                case ESCAPE_CHAR:
-                case DOUBLE_QUOTE_CHAR:
-                    sb.append('\\');
-                    sb.append(c);
-                    break;
-                case '\b':
-                    sb.append("\\b");
-                    break;
-                case '\t':
-                    sb.append("\\t");
-                    break;
-                case '\n':
-                    sb.append("\\n");
-                    break;
-                case '\f':
-                    sb.append("\\f");
-                    break;
-                case '\r':
-                    sb.append("\\r");
-                    break;
-                default:
-                    if (c < ' ' || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100')) {
-                        t = "000" + Integer.toHexString(c);
-                        sb.append("\\u").append(t.substring(t.length() - 4));
-                    } else {
-                        sb.append(c);
-                    }
-            }
-        }
-        return sb.toString();
     }
 
 }

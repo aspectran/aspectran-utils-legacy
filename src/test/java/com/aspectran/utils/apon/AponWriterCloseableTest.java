@@ -21,22 +21,29 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+/**
+ * Test cases for AponWriterCloseable.
+ */
 public class AponWriterCloseableTest {
 
+    /**
+     * Tests indented writing within a try-with-resources block, ensuring auto-closing.
+     */
     @Test
-    public void testWriterClose() throws IOException {
+    public void testIndentedWriteWithTryWithResources() throws IOException {
         String apon = "aspectran: {\n" +
-            "    settings: {\n" +
-            "        transletNameSuffix: .job\n" +
-            "    }\n" +
-            "    bean: {\n" +
-            "        id: *\n" +
-            "        scan: test.**.*Schedule\n" +
-            "        mask: test.**.*\n" +
-            "        scope: singleton\n" +
-            "    }\n" +
-            "}\n";
+                "    settings: {\n" +
+                "        transletNameSuffix: .job\n" +
+                "    }\n" +
+                "    bean: {\n" +
+                "        id: *\n" +
+                "        scan: test.**.*Schedule\n" +
+                "        mask: test.**.*\n" +
+                "        scope: singleton\n" +
+                "    }\n" +
+                "}\n";
 
         Parameters ps = AponReader.read(apon);
         String expected = apon.replace("\n", AponFormat.SYSTEM_NEW_LINE);
@@ -55,4 +62,44 @@ public class AponWriterCloseableTest {
         }
     }
 
+    /**
+     * Verifies that the underlying writer is actually closed when the AponWriterCloseable is closed.
+     */
+    @Test
+    public void testWriterIsClosed() throws IOException {
+        Parameters ps = new VariableParameters();
+        ps.putValue("name", "value");
+        CloseTrackingStringWriter trackingWriter = new CloseTrackingStringWriter();
+
+        AponWriterCloseable aponWriter = null;
+        try {
+            aponWriter = new AponWriterCloseable(trackingWriter);
+            aponWriter.write(ps);
+        } finally {
+            if (aponWriter != null) {
+                aponWriter.close();
+            }
+        }
+
+        assertTrue("The underlying writer should have been closed", trackingWriter.isClosed());
+    }
+
+    /**
+     * A helper StringWriter that tracks whether it has been closed.
+     */
+    private static class CloseTrackingStringWriter extends StringWriter {
+        private boolean closed = false;
+
+        @Override
+        public void close() throws IOException {
+            super.close();
+            this.closed = true;
+        }
+
+        public boolean isClosed() {
+            return closed;
+        }
+    }
+
 }
+

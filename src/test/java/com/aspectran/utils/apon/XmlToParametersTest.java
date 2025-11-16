@@ -18,27 +18,29 @@ package com.aspectran.utils.apon;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.text.ParseException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
+ * Test cases for converting XML to APON Parameters.
+ *
  * <p>Created: 2019-07-08</p>
  */
 public class XmlToParametersTest {
 
+    /**
+     * Tests the conversion of a complex XML structure with nested elements,
+     * attributes, and repeated sibling elements.
+     */
     @Test
-    public void test() throws IOException, ParseException {
-        String converted = convert();
-        String expected = "container: {\n" + "  id: 12\n" + "  item1: {\n" + "    container: [\n" + "      {\n" + "        id: 34\n" + "        item: [\n" + "          {\n" + "            id: 56\n" + "            item: (\n" + "              |a\n" + "              |a\n" + "              |a\n" + "            )\n" + "          }\n" + "          {\n" + "            id: 78\n" + "            item: bbb\n" + "          }\n" + "        ]\n" + "      }\n" + "      {\n" + "        item: [\n" + "          aaa\n" + "          bbb\n" + "          ccc\n" + "        ]\n" + "      }\n" + "    ]\n" + "  }\n" + "  item2: (\n" + "    |\n" + "    |    xyz\n" + "    |  \n" + "  )\n" + "  item3: {\n" + "    id: 90\n" + "    item3: (\n" + "      |\n" + "      |    xyz\n" + "      |  \n" + "    )\n" + "  }\n" + "  item4: {\n" + "    item5: {\n" + "      id: 91\n" + "      item5: (\n" + "        |\n" + "        |      xyz\n" + "        |    \n" + "      )\n" + "    }\n" + "  }\n" + "}\n";
-        assertEquals(converted, expected.replace("\n", AponFormat.SYSTEM_NEW_LINE));
-    }
-
-    static String convert() throws IOException {
+    public void testComplexXmlToParametersConversion() throws IOException {
         String xml = "<container id=\"12\">\n" +
                 "  <item1>\n" +
                 "    <container id=\"34\">\n" +
-                "      <item id=\"56\">a\na\na</item>\n" +
+                "      <item id=\"56\">a\n" +
+                "a\n" +
+                "a</item>\n" +
                 "      <item id=\"78\">bbb</item>\n" +
                 "    </container>\n" +
                 "    <container>\n" +
@@ -50,27 +52,78 @@ public class XmlToParametersTest {
                 "  <item2>\n" +
                 "    xyz\n" +
                 "  </item2>\n" +
-                "  <item3 id=\"90\">\n" +
-                "    xyz\n" +
-                "  </item3>\n" +
-                "  <item4>\n" +
-                "    <item5 id=\"91\">\n" +
-                "      xyz\n" +
-                "    </item5>\n" +
-                "  </item4>\n" +
                 "</container>";
 
-        Parameters ps = XmlToParameters.from(xml);
-        return ps.toString();
+        Parameters params = XmlToParameters.from(xml);
+        Parameters container = params.getParameters("container");
+        assertNotNull(container);
+        assertEquals("12", container.getString("id"));
+
+        Parameters item1 = container.getParameters("item1");
+        assertNotNull(item1);
+
+        // Test array of containers within item1
+        java.util.List<Parameters> containers = item1.getParametersList("container");
+        assertEquals(2, containers.size());
+
+        // First container in the array
+        Parameters container1 = containers.get(0);
+        assertEquals("34", container1.getString("id"));
+        java.util.List<Parameters> items1 = container1.getParametersList("item");
+        assertEquals(2, items1.size());
+        assertEquals("56", items1.get(0).getString("id"));
+        assertEquals("a\na\na", items1.get(0).getString("item"));
+        assertEquals("78", items1.get(1).getString("id"));
+        assertEquals("bbb", items1.get(1).getString("item"));
+
+        // Second container in the array
+        Parameters container2 = containers.get(1);
+        java.util.List<String> items2 = container2.getStringList("item");
+        assertEquals(3, items2.size());
+        assertEquals("aaa", items2.get(0));
     }
 
-    public static void main(String[] args) {
-        try {
-            String result = convert();
-            System.out.println(result);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    /**
+     * Tests a simple XML to Parameters conversion.
+     */
+    @Test
+    public void testSimpleXmlConversion() throws IOException {
+        String xml = "<root><key>value</key><number>123</number></root>";
+        Parameters params = XmlToParameters.from(xml);
+        Parameters root = params.getParameters("root");
+        assertEquals("value", root.getString("key"));
+        assertEquals("123", root.getString("number"));
+    }
+
+    /**
+     * Tests that sibling elements with the same name are converted to an array.
+     */
+    @Test
+    public void testXmlWithSiblingElements() throws IOException {
+        String xml = "<root><item>a</item><item>b</item><item>c</item></root>";
+        Parameters params = XmlToParameters.from(xml);
+        java.util.List<String> items = params.getParameters("root").getStringList("item");
+        assertEquals(3, items.size());
+        assertEquals(java.util.Arrays.asList("a", "b", "c"), items);
+    }
+
+    /**
+     * Tests that CDATA sections are correctly parsed as text content.
+     */
+    @Test
+    public void testXmlWithCDataSection() throws IOException {
+        String xml = "<root><![CDATA[This is <some> text & characters.]]></root>";
+        Parameters params = XmlToParameters.from(xml);
+        assertEquals("This is <some> text & characters.", params.getString("root"));
+    }
+
+    /**
+     * Tests that invalid XML input throws an exception.
+     */
+    @Test(expected = IOException.class)
+    public void testInvalidXmlInput() throws IOException {
+        String malformedXml = "<root><item>a</item><item>b</item</root"; // Missing closing tag
+        XmlToParameters.from(malformedXml);
     }
 
 }

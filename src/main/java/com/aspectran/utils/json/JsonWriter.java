@@ -18,6 +18,7 @@ package com.aspectran.utils.json;
 import com.aspectran.utils.ArrayStack;
 import com.aspectran.utils.Assert;
 import com.aspectran.utils.BeanUtils;
+import com.aspectran.utils.ObjectUtils;
 import com.aspectran.utils.StringifyContext;
 import com.aspectran.utils.annotation.jsr305.NonNull;
 import com.aspectran.utils.apon.Parameter;
@@ -32,6 +33,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -56,6 +58,8 @@ public class JsonWriter {
 
     private StringifyContext stringifyContext;
 
+    private Map<Class<?>, JsonSerializer<?>> serializers;
+
     private boolean prettyPrint = true;
 
     private String indentString = DEFAULT_INDENT_STRING;
@@ -64,7 +68,7 @@ public class JsonWriter {
 
     private int indentDepth;
 
-    private String pendedName;
+    private String pendingName;
 
     private Object upperObject;
 
@@ -78,6 +82,13 @@ public class JsonWriter {
         Assert.notNull(writer, "out must not be null");
         this.writer = writer;
         writtenFlags.push(false);
+    }
+
+    public <T> void registerSerializer(Class<T> type, JsonSerializer<T> serializer) {
+        if (serializers == null) {
+            serializers = new HashMap<Class<?>, JsonSerializer<?>>();
+        }
+        serializers.put(type, serializer);
     }
 
     public void setStringifyContext(StringifyContext stringifyContext) {
@@ -144,7 +155,7 @@ public class JsonWriter {
      */
     @SuppressWarnings("unchecked")
     public <T extends JsonWriter> T beginObject() throws IOException {
-        writePendedName();
+        writePendingName();
         writer.write("{");
         nextLine();
         indentDepth++;
@@ -174,7 +185,7 @@ public class JsonWriter {
      */
     @SuppressWarnings("unchecked")
     public <T extends JsonWriter> T beginArray() throws IOException {
-        writePendedName();
+        writePendingName();
         writer.write("[");
         nextLine();
         indentDepth++;
@@ -215,28 +226,28 @@ public class JsonWriter {
      * @param name the string to write to the writer
      */
     public void writeName(String name) {
-        pendedName = name;
+        pendingName = name;
     }
 
-    private void writePendedName() throws IOException {
+    private void writePendingName() throws IOException {
         if (writtenFlags.peek()) {
             writeComma();
         }
-        if (pendedName != null) {
+        if (pendingName != null) {
             indent();
-            writer.write(escape(pendedName));
+            writer.write(escape(pendingName));
             writer.write(":");
             if (prettyPrint) {
                 writer.write(" ");
             }
-            pendedName = null;
+            pendingName = null;
         } else {
             indent();
         }
     }
 
-    private void clearPendedName() {
-        pendedName = null;
+    private void clearPendingName() {
+        pendingName = null;
     }
 
     /**
@@ -247,10 +258,36 @@ public class JsonWriter {
     public void writeValue(Object object) throws IOException {
         if (object == null) {
             writeNull();
-        } else if (object instanceof String) {
+            return;
+        }
+
+        if (serializers != null) {
+            @SuppressWarnings("unchecked")
+            JsonSerializer<Object> serializer = (JsonSerializer<Object>)serializers.get(object.getClass());
+            if (serializer != null) {
+                serializer.serialize(object, this);
+                return;
+            }
+        }
+
+        if (object instanceof String) {
             writeString((String)object);
         } else if (object instanceof JsonString) {
-            writeJson(object.toString());
+            String json = object.toString();
+            if (json != null) {
+                if (json.trim().isEmpty()) {
+                    writeNull();
+                    return;
+                }
+                try {
+                    Object parsed = JsonParser.parse(json);
+                    writeValue(parsed);
+                } catch (IOException e) {
+                    throw new IOException("Failed to re-parse JsonString", e);
+                }
+            } else {
+                writeNull();
+            }
         } else if (object instanceof Character) {
             writeString(String.valueOf(object));
         } else if (object instanceof Boolean) {
@@ -374,11 +411,11 @@ public class JsonWriter {
      */
     public void writeNull(boolean force) throws IOException {
         if (nullWritable || force) {
-            writePendedName();
+            writePendingName();
             writer.write(NULL_STRING);
             writtenFlags.update(true);
         } else {
-            clearPendedName();
+            clearPendingName();
         }
     }
 
@@ -390,7 +427,7 @@ public class JsonWriter {
      */
     public void writeJson(String json) throws IOException {
         if (nullWritable || json != null) {
-            writePendedName();
+            writePendingName();
             if (json != null) {
                 BufferedReader reader = new BufferedReader(new StringReader(json));
                 boolean first = true;
@@ -408,7 +445,7 @@ public class JsonWriter {
             }
             writtenFlags.update(true);
         } else {
-            clearPendedName();
+            clearPendingName();
         }
     }
 
@@ -418,13 +455,13 @@ public class JsonWriter {
      * @param value the string to write to the writer
      * @throws IOException if an I/O error has occurred
      */
-    private void writeString(String value) throws IOException {
+    protected void writeString(String value) throws IOException {
         if (nullWritable || value != null) {
-            writePendedName();
+            writePendingName();
             writer.write(escape(value));
             writtenFlags.update(true);
         } else {
-            clearPendedName();
+            clearPendingName();
         }
     }
 
@@ -433,13 +470,13 @@ public class JsonWriter {
      * @param value a {@code Boolean} object to write to the writer
      * @throws IOException if an I/O error has occurred
      */
-    private void writeBool(Boolean value) throws IOException {
+    protected void writeBool(Boolean value) throws IOException {
         if (nullWritable || value != null) {
-            writePendedName();
+            writePendingName();
             writer.write(value.toString());
             writtenFlags.update(true);
         } else {
-            clearPendedName();
+            clearPendingName();
         }
     }
 
@@ -448,13 +485,13 @@ public class JsonWriter {
      * @param value a {@code Number} object to write to the writer
      * @throws IOException if an I/O error has occurred
      */
-    private void writeNumber(Number value) throws IOException {
+    protected void writeNumber(Number value) throws IOException {
         if (nullWritable || value != null) {
-            writePendedName();
+            writePendingName();
             writer.write(value.toString());
             writtenFlags.update(true);
         } else {
-            clearPendedName();
+            clearPendingName();
         }
     }
 
@@ -510,19 +547,19 @@ public class JsonWriter {
     private void checkCircularReference(Object object, Object member) throws IOException {
         if (object == member || (upperObject != null && upperObject == member)) {
             String what;
-            if (pendedName != null) {
-                what = "member '" + pendedName + "'";
+            if (pendingName != null) {
+                what = "member '" + pendingName + "'";
             } else {
                 what = "a member";
             }
-            throw new IOException("JSON Serialization Failure: " +
-                    "Circular reference was detected while converting " + what);
+            throw new IOException("JSON Serialization Failure: Circular reference detected for " +
+                    what + " in object " + ObjectUtils.identityToString(object));
         }
     }
 
     /**
      * Produce a string in double quotes with backslash sequences in all the
-     * right places. A backslash will be inserted within </, allowing JSON
+     * right places. A backslash will be inserted within &lt;/, allowing JSON
      * text to be delivered in HTML. In JSON text, a string cannot contain a
      * control character or an unescaped quote or backslash.
      * @param string the input String, may be null
@@ -539,7 +576,7 @@ public class JsonWriter {
         char c = 0;
         String t;
 
-        StringBuilder sb = new StringBuilder(len + 4);
+        StringBuilder sb = new StringBuilder(Math.min(len * 2, len + 16));
         sb.append('"');
         for (int i = 0; i < len; i++) {
             b = c;

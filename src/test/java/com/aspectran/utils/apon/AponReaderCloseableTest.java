@@ -17,23 +17,33 @@ package com.aspectran.utils.apon;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.io.StringReader;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+/**
+ * Test cases for AponReaderCloseable.
+ */
 public class AponReaderCloseableTest {
 
+    /**
+     * Tests that AponReaderCloseable works correctly within a try-with-resources block.
+     */
     @Test
-    public void testReaderClose() throws AponParseException {
+    public void testSuccessfulReadWithTryWithResources() throws AponParseException {
         String apon = "aspectran: {\n" +
-            "    settings: {\n" +
-            "        transletNameSuffix: .job\n" +
-            "    }\n" +
-            "    bean: {\n" +
-            "        id: *\n" +
-            "        scan: test.**.*Schedule\n" +
-            "        mask: test.**.*\n" +
-            "        scope: singleton\n" +
-            "    }\n" +
-            "}\n";
+                "    settings: {\n" +
+                "        transletNameSuffix: .job\n" +
+                "    }\n" +
+                "    bean: {\n" +
+                "        id: *\n" +
+                "        scan: test.**.*Schedule\n" +
+                "        mask: test.**.*\n" +
+                "        scope: singleton\n" +
+                "    }\n" +
+                "}\n";
 
         StringReader reader = new StringReader(apon);
         AponReaderCloseable aponReader = null;
@@ -44,6 +54,66 @@ public class AponReaderCloseableTest {
             if (aponReader != null) {
                 aponReader.close();
             }
+        }
+    }
+
+    /**
+     * Verifies that the underlying reader is actually closed when the AponReaderCloseable is closed.
+     */
+    @Test
+    public void testReaderIsClosed() throws AponParseException {
+        String apon = "name: value";
+        CloseTrackingStringReader trackingReader = new CloseTrackingStringReader(apon);
+
+        AponReaderCloseable aponReader = null;
+        try {
+            aponReader = new AponReaderCloseable(trackingReader);
+            aponReader.read();
+        } finally {
+            if (aponReader != null) {
+                aponReader.close();
+            }
+        }
+
+        assertTrue("The underlying reader should have been closed", trackingReader.isClosed());
+    }
+
+    /**
+     * A helper StringReader that tracks whether it has been closed.
+     */
+    private static class CloseTrackingStringReader extends StringReader {
+        private boolean closed = false;
+
+        public CloseTrackingStringReader(String s) {
+            super(s);
+        }
+
+        @Override
+        public void close() {
+            super.close();
+            this.closed = true;
+        }
+
+        public boolean isClosed() {
+            return closed;
+        }
+    }
+
+    /**
+     * Tests that attempting to read from a closed reader throws an exception.
+     */
+    @Test
+    public void testReadAfterCloseThrowsException() throws AponParseException {
+        String apon = "name: value";
+        AponReaderCloseable aponReader = new AponReaderCloseable(new StringReader(apon));
+        aponReader.read();
+        aponReader.close();
+
+        try {
+            aponReader.read();
+            fail("Reading from a closed reader should throw IOException");
+        } catch (IOException e) {
+            // Expected
         }
     }
 

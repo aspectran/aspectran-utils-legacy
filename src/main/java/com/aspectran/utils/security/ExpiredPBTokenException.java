@@ -15,7 +15,6 @@
  */
 package com.aspectran.utils.security;
 
-
 /**
  * A subclass of {@link InvalidPBTokenException} that is thrown when a
  * time-limited token has expired.

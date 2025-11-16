@@ -13,18 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.utils.wildcard;
+package com.aspectran.utils.json;
 
-import org.junit.Test;
+import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
+/**
+ * Interface for custom JSON serializers.
+ * @param <T> the type of the object to serialize
+ */
+public interface JsonSerializer<T> {
 
-public class WildcardPatternTest {
-
-    @Test
-    public void testWeight() {
-        WildcardPattern pattern = new WildcardPattern("/dashboard/12/34", '/');
-        assertEquals(34.4f, pattern.getWeight(), 0);
-    }
+    /**
+     * Serializes the given object using the provided JsonWriter.
+     * @param object the object to serialize
+     * @param writer the JsonWriter to use for serialization
+     * @throws IOException if an I/O error occurs
+     */
+    void serialize(T object, JsonWriter writer) throws IOException;
 
 }

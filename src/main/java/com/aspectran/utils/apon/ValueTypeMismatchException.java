@@ -18,7 +18,6 @@ package com.aspectran.utils.apon;
 import com.aspectran.utils.ExceptionUtils;
 import com.aspectran.utils.annotation.jsr305.NonNull;
 
-
 /**
  * Thrown when a value cannot be converted to the required target type due to
  * an APON value-type mismatch (e.g., attempting to coerce a string to an int).
@@ -37,14 +36,25 @@ public class ValueTypeMismatchException extends InvalidParameterValueException {
      * Construct an exception describing a failed conversion due to incompatible value types.
      * @param valueType the actual source type encountered
      * @param requiredType the target type that was expected
+     */
+    public ValueTypeMismatchException(@NonNull Class<?> valueType,
+                                      @NonNull Class<?> requiredType) {
+        super("Failed to convert value of type [" + valueType.getName() + "] " +
+                "to required type [" + requiredType.getName() + "]");
+    }
+
+    /**
+     * Construct an exception describing a failed conversion due to incompatible value types.
+     * @param valueType the actual source type encountered
+     * @param requiredType the target type that was expected
      * @param cause the underlying cause of the failure
      */
     public ValueTypeMismatchException(@NonNull Class<?> valueType,
                                       @NonNull Class<?> requiredType,
                                       @NonNull Throwable cause) {
         super("Failed to convert value of type [" + valueType.getName() + "] " +
-            "to required type [" + requiredType.getName() + "]; Cause: " +
-            ExceptionUtils.getRootCauseSimpleMessage(cause), cause);
+                "to required type [" + requiredType.getName() + "]; Cause: " +
+                ExceptionUtils.getRootCauseSimpleMessage(cause), cause);
     }
 
 }
