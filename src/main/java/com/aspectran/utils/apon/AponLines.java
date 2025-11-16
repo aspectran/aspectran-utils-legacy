@@ -22,7 +22,17 @@ import com.aspectran.utils.annotation.jsr305.NonNull;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-import static com.aspectran.utils.apon.AponFormat.*;
+import static com.aspectran.utils.apon.AponFormat.ARRAY_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.ARRAY_OPEN;
+import static com.aspectran.utils.apon.AponFormat.BLOCK_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.BLOCK_OPEN;
+import static com.aspectran.utils.apon.AponFormat.DOUBLE_QUOTE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.NAME_VALUE_SEPARATOR;
+import static com.aspectran.utils.apon.AponFormat.NEW_LINE;
+import static com.aspectran.utils.apon.AponFormat.SPACE;
+import static com.aspectran.utils.apon.AponFormat.TEXT_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.TEXT_LINE_START;
+import static com.aspectran.utils.apon.AponFormat.TEXT_OPEN;
 
 /**
  * A utility class for conveniently writing text in APON format.

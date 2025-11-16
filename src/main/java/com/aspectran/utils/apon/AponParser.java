@@ -28,7 +28,23 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.aspectran.utils.apon.AponFormat.*;
+import static com.aspectran.utils.apon.AponFormat.ARRAY_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.ARRAY_OPEN;
+import static com.aspectran.utils.apon.AponFormat.BLOCK_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.BLOCK_OPEN;
+import static com.aspectran.utils.apon.AponFormat.COMMENT_LINE_START;
+import static com.aspectran.utils.apon.AponFormat.DOUBLE_QUOTE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.EMPTY_ARRAY;
+import static com.aspectran.utils.apon.AponFormat.EMPTY_BLOCK;
+import static com.aspectran.utils.apon.AponFormat.FALSE;
+import static com.aspectran.utils.apon.AponFormat.NAME_VALUE_SEPARATOR;
+import static com.aspectran.utils.apon.AponFormat.NULL;
+import static com.aspectran.utils.apon.AponFormat.SINGLE_QUOTE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.SYSTEM_NEW_LINE;
+import static com.aspectran.utils.apon.AponFormat.TEXT_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.TEXT_LINE_START;
+import static com.aspectran.utils.apon.AponFormat.TEXT_OPEN;
+import static com.aspectran.utils.apon.AponFormat.TRUE;
 
 /**
  * A modern, structure-based parser for APON (Aspectran Parameters Object Notation).

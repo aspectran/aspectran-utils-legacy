@@ -29,7 +29,23 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.List;
 
-import static com.aspectran.utils.apon.AponFormat.*;
+import static com.aspectran.utils.apon.AponFormat.ARRAY_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.ARRAY_OPEN;
+import static com.aspectran.utils.apon.AponFormat.BLOCK_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.BLOCK_OPEN;
+import static com.aspectran.utils.apon.AponFormat.COMMENT_LINE_START;
+import static com.aspectran.utils.apon.AponFormat.DEFAULT_INDENT_STRING;
+import static com.aspectran.utils.apon.AponFormat.DOUBLE_QUOTE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.EMPTY_ARRAY;
+import static com.aspectran.utils.apon.AponFormat.EMPTY_BLOCK;
+import static com.aspectran.utils.apon.AponFormat.NAME_VALUE_SEPARATOR;
+import static com.aspectran.utils.apon.AponFormat.NEW_LINE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.NULL;
+import static com.aspectran.utils.apon.AponFormat.SPACE_CHAR;
+import static com.aspectran.utils.apon.AponFormat.SYSTEM_NEW_LINE;
+import static com.aspectran.utils.apon.AponFormat.TEXT_CLOSE;
+import static com.aspectran.utils.apon.AponFormat.TEXT_LINE_START;
+import static com.aspectran.utils.apon.AponFormat.TEXT_OPEN;
 
 /**
  * A streaming writer that serializes {@link Parameters} into APON (Aspectran Parameters
