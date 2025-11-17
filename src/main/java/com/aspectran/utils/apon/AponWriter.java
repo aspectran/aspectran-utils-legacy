@@ -297,7 +297,7 @@ public class AponWriter implements Flushable {
             if (parameters.isCompactStyle()) {
                 for (Parameter pv : parameters.getParameterValues()) {
                     if (nullWritable || pv.isAssigned()) {
-                        write(pv);
+                        writeParameter(pv);
                     }
                 }
             } else {
@@ -314,7 +314,7 @@ public class AponWriter implements Flushable {
             beginBlock();
             for (Parameter pv : parameters.getParameterValues()) {
                 if (nullWritable || pv.isAssigned()) {
-                    write(pv);
+                    writeParameter(pv);
                 }
             }
             endBlock();
@@ -333,20 +333,20 @@ public class AponWriter implements Flushable {
                     beginBlock();
                     for (Parameter pv : ps.getParameterValues()) {
                         if (nullWritable || pv.isAssigned()) {
-                            write(pv);
+                            writeParameter(pv);
                         }
                     }
                     endBlock();
                 } else {
                     indent();
-                    write(value);
+                    writeValue(value);
                 }
             }
             endArray();
         }
     }
 
-    private void write(Parameter parameter) throws IOException {
+    private void writeParameter(Parameter parameter) throws IOException {
         Assert.notNull(parameter, "parameter must not be null");
         if (parameter.getValueType() == ValueType.PARAMETERS || parameter.getValueType() == ValueType.VARIABLE) {
             if (parameter.isArray()) {
@@ -478,7 +478,7 @@ public class AponWriter implements Flushable {
                             for (Object value : list) {
                                 if (nullWritable || value != null) {
                                     indent();
-                                    write(value);
+                                    writeValue(value);
                                 }
                             }
                             endArray();
@@ -487,7 +487,7 @@ public class AponWriter implements Flushable {
                         for (Object value : list) {
                             if (nullWritable || value != null) {
                                 writeName(parameter);
-                                write(value);
+                                writeValue(value);
                             }
                         }
                     }
@@ -495,13 +495,13 @@ public class AponWriter implements Flushable {
             } else {
                 if (nullWritable || parameter.getValue() != null) {
                     writeName(parameter);
-                    write(parameter.getValue());
+                    writeValue(parameter.getValue());
                 }
             }
         }
     }
 
-    private void write(Object value) throws IOException {
+    private void writeValue(Object value) throws IOException {
         if (value != null) {
             if (value instanceof List<?>) {
                 List<?> list = (List<?>)value;
@@ -511,7 +511,7 @@ public class AponWriter implements Flushable {
                     beginArray();
                     for (Object obj : list) {
                         indent();
-                        write(obj);
+                        writeValue(obj);
                     }
                     endArray();
                 }

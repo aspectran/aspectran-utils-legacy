@@ -22,7 +22,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Test cases for ArrayParameters.
@@ -293,7 +296,7 @@ public class ArrayParametersTest {
     }
 
     @Test
-    public void testXSSPatternItem() throws AponParseException {
+    public void testXSSPatternItem() throws IOException {
         String patterns = "[\n" +
                 "    {\n" +
                 "        pattern: <script>(.*?)</script>\n" +
@@ -302,13 +305,13 @@ public class ArrayParametersTest {
                 "        dotall: false\n" +
                 "    }\n" +
                 "    {\n" +
-                "        pattern: src[\\r\\n]*=[\\r\\n]*\\'(.*?)\\'\n" +
+                "        pattern: \"src[\\\\r\\n]*=[\\\\r\\\\n]*\\\\'(.*?)\\\\'\"\n" +
                 "        caseInsensitive: true\n" +
                 "        multiline: true\n" +
                 "        dotall: true\n" +
                 "    }\n" +
                 "    {\n" +
-                "        pattern: src[\\r\\n]*=[\\r\\n]*\\\"(.*?)\\\"\n" +
+                "        pattern: \"src[\\\\r\\\\n]*=[\\\\r\\\\n]*\\\"(.*?)\\\"\"\n" +
                 "        caseInsensitive: true\n" +
                 "        multiline: true\n" +
                 "        dotall: true\n" +
@@ -363,6 +366,8 @@ public class ArrayParametersTest {
         assertNotNull(xssPatternItemList);
         assertEquals(10, xssPatternItemList.size());
         assertEquals("<script>(.*?)</script>", xssPatternItemList.get(0).getPattern());
+        String expectedApon = new AponWriter().indentString("    ").write(xssPatternParameters).toString();
+        assertEquals(patterns.replace("\r\n", "\n"), expectedApon.replace("\r\n", "\n"));
     }
 
 }
