@@ -28,7 +28,7 @@ To use `aspectran-utils-legacy` in your project, add the appropriate dependency 
 <dependency>
     <groupId>com.aspectran</groupId>
     <artifactId>aspectran-utils-legacy</artifactId>
-    <version>1.0.3</version> <!-- Use the actual version -->
+    <version>1.1.0</version> <!-- Use the actual version -->
 </dependency>
 ```
 
