@@ -29,7 +29,7 @@ import java.util.StringTokenizer;
  * <p>This class provides convenience methods for common string manipulations
  * such as checking for emptiness, trimming, splitting, and joining.</p>
  */
-public abstract class StringUtils {
+public class StringUtils {
 
     /** Constant for an empty {@link String}. */
     public static final String EMPTY = "";
@@ -38,12 +38,18 @@ public abstract class StringUtils {
     private static final String[] EMPTY_STRING_ARRAY = {};
 
     /**
+     * This class cannot be instantiated.
+     */
+    private StringUtils() {
+    }
+
+    /**
      * Returns {@code true} if the given string is null or is the empty string.
      * @param str a string reference to check
      * @return {@code true} if the string is null or is the empty string
      */
     public static boolean isEmpty(String str) {
-        return (str == null || str.length() == 0);
+        return (str == null || str.isEmpty());
     }
 
     /**
@@ -61,7 +67,7 @@ public abstract class StringUtils {
      * @return {@code string} itself if it is nonempty; {@code null} if it is empty or null
      */
     public static String emptyToNull(String str) {
-        return (str == null || str.length() == 0 ? null : str);
+        return (str == null || str.isEmpty() ? null : str);
     }
 
     /**
@@ -91,7 +97,7 @@ public abstract class StringUtils {
      * @see #hasText(String)
      */
     public static boolean hasLength(String str) {
-        return (str != null && str.length() != 0);
+        return (str != null && !str.isEmpty());
     }
 
     /**
@@ -126,7 +132,7 @@ public abstract class StringUtils {
      * @see #hasText(CharSequence)
      */
     public static boolean hasText(String str) {
-        return (str != null && str.length() != 0 && containsText(str));
+        return (str != null && !str.isEmpty() && containsText(str));
     }
 
     private static boolean containsText(@NonNull CharSequence chars) {
@@ -306,7 +312,7 @@ public abstract class StringUtils {
      * @return true if the string starts with the specified prefix; otherwise false
      */
     public static boolean startsWith(String str, char prefix) {
-        return (str != null && str.length() != 0 && (str.charAt(0) == prefix));
+        return (str != null && !str.isEmpty() && (str.charAt(0) == prefix));
     }
 
     /**
@@ -316,7 +322,7 @@ public abstract class StringUtils {
      * @return true if the string ends with the specified suffix; otherwise false
      */
     public static boolean endsWith(String str, char suffix) {
-        return (str != null && str.length() != 0 && (str.charAt(str.length() - 1) == suffix));
+        return (str != null && !str.isEmpty() && (str.charAt(str.length() - 1) == suffix));
     }
 
     /**
@@ -360,26 +366,22 @@ public abstract class StringUtils {
         }
         StringBuilder sb = new StringBuilder(str);
         int loop = Math.min(searchList.length, replacementList.length);
-        int start = 0;
-        int end;
-        int searchLen;
-        int replaceLen;
         for (int i = 0; i < loop; i++) {
-            if (searchList[i] == null || replacementList[i] == null) {
+            String search = searchList[i];
+            String replacement = replacementList[i];
+            if (search == null || replacement == null) {
                 continue;
             }
-            searchLen = searchList[i].length();
-            replaceLen = replacementList[i].length();
-            while (true) {
-                if (sb.length() == 0) {
+            int searchLen = search.length();
+            int replaceLen = replacement.length();
+            int start = 0;
+            while (start < sb.length()) {
+                int index = sb.indexOf(search, start);
+                if (index == -1) {
                     break;
                 }
-                start = sb.indexOf(searchList[i], start + replaceLen);
-                if (start == -1) {
-                    break;
-                }
-                end = start + searchLen;
-                sb.replace(start, end, replacementList[i]);
+                sb.replace(index, index + searchLen, replacement);
+                start = index + replaceLen;
             }
         }
         return sb.toString();
@@ -435,7 +437,7 @@ public abstract class StringUtils {
         if (str == null) {
             return new String[] {null, null};
         }
-        if (str.length() == 0) {
+        if (str.isEmpty()) {
             return new String[] {EMPTY, null};
         }
         if (isEmpty(delim)) {
@@ -547,7 +549,6 @@ public abstract class StringUtils {
      * @param size the desired size of the array
      * @return an array of the splitted strings, with a fixed size
      */
-    @NonNull
     public static String[] split(String str, char delim, int size) {
         String[] arr1 = new String[size];
         String[] arr2 = split(str, delim);
@@ -631,7 +632,7 @@ public abstract class StringUtils {
      * @return the delimited {@code String}
      */
     public static String join(Collection<?> collection, String delim) {
-        if (collection == null || collection.size() == 0) {
+        if (collection == null || collection.isEmpty()) {
             return EMPTY;
         }
         StringBuilder sb = new StringBuilder();
@@ -688,7 +689,7 @@ public abstract class StringUtils {
      * @return the resulting {@code String} array, or an empty array if the collection is {@code null} or empty
      */
     public static String[] toStringArray(Collection<String> collection) {
-        return (collection != null && collection.size() != 0 ?
+        return (collection != null && !collection.isEmpty() ?
                 collection.toArray(EMPTY_STRING_ARRAY) : EMPTY_STRING_ARRAY);
     }
 
@@ -775,54 +776,6 @@ public abstract class StringUtils {
             }
         }
         return count;
-    }
-
-    /**
-     * Converts a byte size into a human-friendly format (e.g., 1024 -&gt; "1.0 KB").
-     * @param bytes the number of bytes
-     * @return a human-friendly byte size string (includes units like B, KB, MB, GB)
-     */
-    @NonNull
-    public static String toHumanFriendlyByteSize(long bytes) {
-        if (bytes < 1024 && bytes > -1024) {
-            return bytes + " B";
-        }
-        String minus = null;
-        if (bytes < 0) {
-            minus = "-";
-            bytes = -bytes;
-        }
-        int z = (63 - Long.numberOfLeadingZeros(bytes)) / 10;
-        double d = (double)bytes / (1L << (z * 10));
-        String format = (d % 1.0 == 0 ? "%s%.0f %sB" : "%s%.1f %sB");
-        return String.format(format, nullToEmpty(minus), d, " KMGTPE".charAt(z));
-    }
-
-    /**
-     * Converts a human-friendly byte size string (e.g., "1KB", "10MB") into the number of bytes.
-     * @param bytes the human-friendly byte size string to parse
-     * @return the number of bytes
-     * @throws NumberFormatException if the string format is invalid
-     */
-    @SuppressWarnings("fallthrough")
-    public static long toMachineFriendlyByteSize(@NonNull String bytes) {
-        double d;
-        try {
-            d = Double.parseDouble(bytes.replaceAll("[GMK]?B?$", EMPTY));
-        } catch (NumberFormatException e)  {
-            String msg = "Size must be specified as bytes (B), " +
-                    "kilobytes (KB), megabytes (MB), gigabytes (GB). " +
-                    "E.g. 1024, 1KB, 10M, 10MB, 100G, 100GB";
-            throw new NumberFormatException(msg + " " + e.getMessage());
-        }
-        long l = Math.round(d * 1024 * 1024 * 1024L);
-        int idx = Math.max(0, bytes.length() - (bytes.endsWith("B") ? 2 : 1));
-        switch (bytes.charAt(idx)) {
-            default:  l /= 1024;
-            case 'K': l /= 1024;
-            case 'M': l /= 1024;
-            case 'G': return l;
-        }
     }
 
 }
