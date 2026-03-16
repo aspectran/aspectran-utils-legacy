@@ -16,6 +16,7 @@
 package com.aspectran.utils.apon;
 
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -136,6 +137,24 @@ public class AponWriterTest {
         AponWriter writer2 = new AponWriter().nullWritable(true);
         String apon2 = writer2.write(params).toString();
         assertTrue(apon2.contains("nullKey: null"));
+    }
+
+    /**
+     * Tests the 'nullWritable' option for toString().
+     */
+    @Test
+    void testToStringWithNullWritableOption() {
+        Parameters params = new VariableParameters();
+        params.putValue("key", "value");
+        params.putValue("nullKey", null);
+
+        // When nullWritable is false, null values are omitted
+        String apon1 = params.toString(false);
+        assertFalse(apon1.contains("nullKey"));
+
+        // When nullWritable is true, null values are included
+        String apon2 = params.toString(true);
+        assertTrue(apon2.contains("nullKey"));
     }
 
     /**

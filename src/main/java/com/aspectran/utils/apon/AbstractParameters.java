@@ -573,7 +573,7 @@ public abstract class AbstractParameters implements Parameters {
     @Override
     public void readFrom(VariableParameters parameters) throws AponParseException {
         if (parameters != null) {
-            readFrom(parameters.toString());
+            readFrom(parameters.toString(false));
         }
     }
 
@@ -634,8 +634,14 @@ public abstract class AbstractParameters implements Parameters {
 
     @Override
     public String toString() {
+        return toString(true);
+    }
+
+    @Override
+    public String toString(boolean nullWritable) {
         try {
             return new AponWriter()
+                    .nullWritable(nullWritable)
                     .write(this)
                     .toString();
         } catch (IOException e) {
