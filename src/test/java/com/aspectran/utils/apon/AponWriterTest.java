@@ -142,7 +142,7 @@ public class AponWriterTest {
      * Tests the 'nullWritable' option for toString().
      */
     @Test
-    void testToStringWithNullWritableOption() {
+    public void testToStringWithNullWritableOption() {
         Parameters params = new VariableParameters();
         params.putValue("key", "value");
         params.putValue("nullKey", null);
