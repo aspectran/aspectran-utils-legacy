@@ -42,7 +42,7 @@ import static com.aspectran.utils.PBEncryptionUtils.getDefaultEncryptor;
  * overridden for all loading operations by setting the
  * "{@value #PROPERTIES_ENCODING_PROPERTY}" system property.
  */
-public abstract class PropertiesLoaderUtils {
+public class PropertiesLoaderUtils {
 
     private static final String XML_FILE_EXTENSION = ".xml";
 
