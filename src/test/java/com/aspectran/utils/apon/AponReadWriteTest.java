@@ -16,6 +16,7 @@
 package com.aspectran.utils.apon;
 
 import com.aspectran.utils.ResourceUtils;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -23,8 +24,6 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Test cases for reading from and writing to APON format.
@@ -48,21 +47,18 @@ public class AponReadWriteTest {
 
         // 2. Write to a temporary file
         File outputFile = tempFolder.newFile("apon-test-output.apon");
-        AponWriterCloseable aponWriter = null;
+        AponWriterCloseable aponWriter = new AponWriterCloseable(outputFile);
         try {
-            aponWriter = new AponWriterCloseable(outputFile);
             aponWriter.write(originalParams);
         } finally {
-            if (aponWriter != null) {
-                aponWriter.close();
-            }
+            aponWriter.close();
         }
 
         // 3. Read back from the temporary file
         Parameters rereadParams = AponReader.read(outputFile);
 
         // 4. Verify that the data is the same
-        assertEquals(originalParams.toString(), rereadParams.toString());
+        Assert.assertEquals(originalParams.toString(), rereadParams.toString());
     }
 
     /**
@@ -80,14 +76,11 @@ public class AponReadWriteTest {
 
         // 2. Write to a StringWriter
         StringWriter stringWriter = new StringWriter();
-        AponWriterCloseable aponWriter = null;
+        AponWriterCloseable aponWriter = new AponWriterCloseable(stringWriter);
         try {
-            aponWriter = new AponWriterCloseable(stringWriter);
             aponWriter.write(originalParams);
         } finally {
-            if (aponWriter != null) {
-                aponWriter.close();
-            }
+            aponWriter.close();
         }
         String aponString = stringWriter.toString();
 
@@ -95,7 +88,7 @@ public class AponReadWriteTest {
         Parameters rereadParams = AponReader.read(aponString);
 
         // 4. Verify that the data is the same
-        assertEquals(originalParams.toString(), rereadParams.toString());
+        Assert.assertEquals(originalParams.toString(), rereadParams.toString());
     }
 
 }

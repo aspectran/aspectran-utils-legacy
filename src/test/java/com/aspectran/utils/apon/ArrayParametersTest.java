@@ -16,16 +16,12 @@
 package com.aspectran.utils.apon;
 
 import com.aspectran.utils.apon.test.XSSPatternItem;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * Test cases for ArrayParameters.
@@ -54,10 +50,10 @@ public class ArrayParametersTest {
         ArrayParameters fromConstructor = new ArrayParameters(apon);
         ArrayParameters fromReader = new AponReader(apon).read(new ArrayParameters());
 
-        assertEquals(fromConstructor.toString(), fromReader.toString());
-        assertEquals(2, fromConstructor.getParametersList().size());
-        assertEquals(111, (int)fromConstructor.getParametersList().get(0).getInt("param1"));
-        assertEquals(444, (int)fromConstructor.getParametersList().get(1).getInt("param4"));
+        Assert.assertEquals(fromConstructor.toString(), fromReader.toString());
+        Assert.assertEquals(2, fromConstructor.getParametersList().size());
+        Assert.assertEquals(111, (int)fromConstructor.getParametersList().get(0).getInt("param1"));
+        Assert.assertEquals(444, (int)fromConstructor.getParametersList().get(1).getInt("param4"));
     }
 
     /**
@@ -91,7 +87,7 @@ public class ArrayParametersTest {
         String actual = arrayParameters.toString().trim().replace("\r\n", "\n");
         String normalizedExpected = expected.trim().replace("\r\n", "\n");
 
-        assertEquals(normalizedExpected, actual);
+        Assert.assertEquals(normalizedExpected, actual);
     }
 
     /**
@@ -100,21 +96,21 @@ public class ArrayParametersTest {
     @Test
     public void testAddingAndAccessingElements() {
         ArrayParameters arrayParameters = new ArrayParameters();
-        assertFalse(arrayParameters.isEmpty());
+        Assert.assertFalse(arrayParameters.isEmpty());
 
         Parameters p1 = new VariableParameters();
         p1.putValue("id", 1);
         arrayParameters.addValue(p1);
 
-        assertEquals(1, arrayParameters.getParametersList().size());
-        assertEquals(1, (int)arrayParameters.getParametersList().get(0).getInt("id"));
+        Assert.assertEquals(1, arrayParameters.getParametersList().size());
+        Assert.assertEquals(1, (int)arrayParameters.getParametersList().get(0).getInt("id"));
 
         Parameters p2 = new VariableParameters();
         p2.putValue("id", 2);
         arrayParameters.addValue(p2);
 
-        assertEquals(2, arrayParameters.getParametersList().size());
-        assertEquals(2, (int)arrayParameters.getParametersList().get(1).getInt("id"));
+        Assert.assertEquals(2, arrayParameters.getParametersList().size());
+        Assert.assertEquals(2, (int)arrayParameters.getParametersList().get(1).getInt("id"));
     }
 
     /**
@@ -123,16 +119,16 @@ public class ArrayParametersTest {
     @Test
     public void testEmptyArray() throws AponParseException {
         ArrayParameters fromEmptyString = new ArrayParameters("");
-        assertNotNull(fromEmptyString.iterator());
-        assertFalse(fromEmptyString.iterator().hasNext());
+        Assert.assertNotNull(fromEmptyString.iterator());
+        Assert.assertFalse(fromEmptyString.iterator().hasNext());
 
         ArrayParameters fromWhitespace = new ArrayParameters("  \n\t  ");
-        assertNotNull(fromWhitespace.iterator());
-        assertFalse(fromWhitespace.iterator().hasNext());
+        Assert.assertNotNull(fromWhitespace.iterator());
+        Assert.assertFalse(fromWhitespace.iterator().hasNext());
 
         ArrayParameters programmatically = new ArrayParameters();
-        assertNotNull(programmatically.iterator());
-        assertEquals("[\n]", programmatically.toString().trim().replace("\r\n", "\n"));
+        Assert.assertNotNull(programmatically.iterator());
+        Assert.assertEquals("[]", programmatically.toString().trim());
     }
 
     @Test
@@ -145,8 +141,8 @@ public class ArrayParametersTest {
 
         String[] stringArray = {"apple", "banana", "cherry"};
         List<String> stringList = Arrays.asList("apple", "banana", "cherry");
-        assertArrayEquals(stringArray, stringParams.getStringArray());
-        assertEquals(stringList, stringParams.getStringList());
+        Assert.assertArrayEquals(stringArray, stringParams.getStringArray());
+        Assert.assertEquals(stringList, stringParams.getStringList());
 
         // Test with Integers
         ArrayParameters intParams = new ArrayParameters();
@@ -156,8 +152,8 @@ public class ArrayParametersTest {
 
         Integer[] intArray = {10, 20, 30};
         List<Integer> intList = Arrays.asList(10, 20, 30);
-        assertArrayEquals(intArray, intParams.getIntArray());
-        assertEquals(intList, intParams.getIntList());
+        Assert.assertArrayEquals(intArray, intParams.getIntArray());
+        Assert.assertEquals(intList, intParams.getIntList());
 
         // Test with Longs
         ArrayParameters longParams = new ArrayParameters();
@@ -167,8 +163,8 @@ public class ArrayParametersTest {
 
         Long[] longArray = {100L, 200L, 300L};
         List<Long> longList = Arrays.asList(100L, 200L, 300L);
-        assertArrayEquals(longArray, longParams.getLongArray());
-        assertEquals(longList, longParams.getLongList());
+        Assert.assertArrayEquals(longArray, longParams.getLongArray());
+        Assert.assertEquals(longList, longParams.getLongList());
 
         // Test with Doubles
         ArrayParameters doubleParams = new ArrayParameters();
@@ -178,8 +174,8 @@ public class ArrayParametersTest {
 
         Double[] doubleArray = {10.1, 20.2, 30.3};
         List<Double> doubleList = Arrays.asList(10.1, 20.2, 30.3);
-        assertArrayEquals(doubleArray, doubleParams.getDoubleArray());
-        assertEquals(doubleList, doubleParams.getDoubleList());
+        Assert.assertArrayEquals(doubleArray, doubleParams.getDoubleArray());
+        Assert.assertEquals(doubleList, doubleParams.getDoubleList());
 
         // Test with Booleans
         ArrayParameters boolParams = new ArrayParameters();
@@ -189,8 +185,8 @@ public class ArrayParametersTest {
 
         Boolean[] boolArray = {true, false, true};
         List<Boolean> boolList = Arrays.asList(true, false, true);
-        assertArrayEquals(boolArray, boolParams.getBooleanArray());
-        assertEquals(boolList, boolParams.getBooleanList());
+        Assert.assertArrayEquals(boolArray, boolParams.getBooleanArray());
+        Assert.assertEquals(boolList, boolParams.getBooleanList());
     }
 
     @Test
@@ -204,15 +200,15 @@ public class ArrayParametersTest {
         mixedParams.addValue(p);
 
         List<?> valueList = mixedParams.getValueList();
-        assertEquals(4, valueList.size());
-        assertEquals("text", valueList.get(0));
-        assertEquals(123, valueList.get(1));
-        assertEquals(true, valueList.get(2));
-        assertEquals(p, valueList.get(3));
+        Assert.assertEquals(4, valueList.size());
+        Assert.assertEquals("text", valueList.get(0));
+        Assert.assertEquals(123, valueList.get(1));
+        Assert.assertEquals(true, valueList.get(2));
+        Assert.assertEquals(p, valueList.get(3));
 
         // Test conversion to string array
         String[] stringArray = {"text", "123", "true", p.toString()};
-        assertArrayEquals(stringArray, mixedParams.getStringArray());
+        Assert.assertArrayEquals(stringArray, mixedParams.getStringArray());
     }
 
     @Test
@@ -246,30 +242,30 @@ public class ArrayParametersTest {
 
         // Verify retrieval of stringList
         ArrayParameters retrievedStringArray = mainParams.getParameters("stringList");
-        assertNotNull(retrievedStringArray);
-        assertEquals(2, retrievedStringArray.getStringList().size());
-        assertEquals("value1", retrievedStringArray.getStringList().get(0));
-        assertEquals("value2", retrievedStringArray.getStringList().get(1));
+        Assert.assertNotNull(retrievedStringArray);
+        Assert.assertEquals(2, retrievedStringArray.getStringList().size());
+        Assert.assertEquals("value1", retrievedStringArray.getStringList().get(0));
+        Assert.assertEquals("value2", retrievedStringArray.getStringList().get(1));
 
         // Verify retrieval of intList
         ArrayParameters retrievedIntArray = mainParams.getParameters("intList");
-        assertNotNull(retrievedIntArray);
-        assertEquals(2, retrievedIntArray.getIntList().size());
-        assertEquals(Integer.valueOf(100), retrievedIntArray.getIntList().get(0));
-        assertEquals(Integer.valueOf(200), retrievedIntArray.getIntList().get(1));
+        Assert.assertNotNull(retrievedIntArray);
+        Assert.assertEquals(2, retrievedIntArray.getIntList().size());
+        Assert.assertEquals(100, (int)retrievedIntArray.getIntList().get(0));
+        Assert.assertEquals(200, (int)retrievedIntArray.getIntList().get(1));
 
         // Verify retrieval of objectList
         ArrayParameters retrievedObjectArray = mainParams.getParameters("objectList");
-        assertNotNull(retrievedObjectArray);
-        assertEquals(2, retrievedObjectArray.getParametersList().size());
-        assertEquals(1, (int)retrievedObjectArray.getParametersList().get(0).getInt("id"));
-        assertEquals("Item A", retrievedObjectArray.getParametersList().get(0).getString("name"));
-        assertEquals(2, (int)retrievedObjectArray.getParametersList().get(1).getInt("id"));
-        assertEquals("Item B", retrievedObjectArray.getParametersList().get(1).getString("name"));
+        Assert.assertNotNull(retrievedObjectArray);
+        Assert.assertEquals(2, retrievedObjectArray.getParametersList().size());
+        Assert.assertEquals(1, (int)retrievedObjectArray.getParametersList().get(0).getInt("id"));
+        Assert.assertEquals("Item A", retrievedObjectArray.getParametersList().get(0).getString("name"));
+        Assert.assertEquals(2, (int)retrievedObjectArray.getParametersList().get(1).getInt("id"));
+        Assert.assertEquals("Item B", retrievedObjectArray.getParametersList().get(1).getString("name"));
 
         // 4. Verify APON string output
         String apon = new AponWriter().write(mainParams).toString();
-        assertEquals(apon, mainParams.toString());
+        Assert.assertEquals(apon, mainParams.toString());
 
         String expectedApon = "stringList: [\n" +
                 "  value1\n" +
@@ -288,11 +284,11 @@ public class ArrayParametersTest {
                 "    id: 2\n" +
                 "    name: Item B\n" +
                 "  }\n" +
-                "]";
+                "]\n";
         // Normalize line endings for comparison
         String actual = mainParams.toString().trim().replace("\r\n", "\n");
         String normalizedExpected = expectedApon.trim().replace("\r\n", "\n");
-        assertEquals(normalizedExpected, actual);
+        Assert.assertEquals(normalizedExpected, actual);
     }
 
     @Test
@@ -341,13 +337,13 @@ public class ArrayParametersTest {
                 "        dotall: true\n" +
                 "    }\n" +
                 "    {\n" +
-                "        pattern: javascript:\n" +
+                "        pattern: \"javascript:\"\n" +
                 "        caseInsensitive: true\n" +
                 "        multiline: false\n" +
                 "        dotall: false\n" +
                 "    }\n" +
                 "    {\n" +
-                "        pattern: vbscript:\n" +
+                "        pattern: \"vbscript:\"\n" +
                 "        caseInsensitive: true\n" +
                 "        multiline: false\n" +
                 "        dotall: false\n" +
@@ -363,11 +359,11 @@ public class ArrayParametersTest {
         ArrayParameters xssPatternParameters = new ArrayParameters(XSSPatternItem.class, patterns);
         @SuppressWarnings("unchecked")
         List<XSSPatternItem> xssPatternItemList = (List<XSSPatternItem>)xssPatternParameters.getValueList();
-        assertNotNull(xssPatternItemList);
-        assertEquals(10, xssPatternItemList.size());
-        assertEquals("<script>(.*?)</script>", xssPatternItemList.get(0).getPattern());
+        Assert.assertNotNull(xssPatternItemList);
+        Assert.assertEquals(10, xssPatternItemList.size());
+        Assert.assertEquals("<script>(.*?)</script>", xssPatternItemList.get(0).getPattern());
         String expectedApon = new AponWriter().indentString("    ").write(xssPatternParameters).toString();
-        assertEquals(patterns.replace("\r\n", "\n"), expectedApon.replace("\r\n", "\n"));
+        Assert.assertEquals(patterns.replace("\r\n", "\n"), expectedApon.replace("\r\n", "\n"));
     }
 
 }

@@ -15,13 +15,11 @@
  */
 package com.aspectran.utils.apon;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.StringReader;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Test cases for AponReaderCloseable.
@@ -46,14 +44,11 @@ public class AponReaderCloseableTest {
                 "}\n";
 
         StringReader reader = new StringReader(apon);
-        AponReaderCloseable aponReader = null;
+        AponReaderCloseable aponReader = new AponReaderCloseable(reader);
         try {
-            aponReader = new AponReaderCloseable(reader);
             aponReader.read();
         } finally {
-            if (aponReader != null) {
-                aponReader.close();
-            }
+            aponReader.close();
         }
     }
 
@@ -65,17 +60,14 @@ public class AponReaderCloseableTest {
         String apon = "name: value";
         CloseTrackingStringReader trackingReader = new CloseTrackingStringReader(apon);
 
-        AponReaderCloseable aponReader = null;
+        AponReaderCloseable aponReader = new AponReaderCloseable(trackingReader);
         try {
-            aponReader = new AponReaderCloseable(trackingReader);
             aponReader.read();
         } finally {
-            if (aponReader != null) {
-                aponReader.close();
-            }
+            aponReader.close();
         }
 
-        assertTrue("The underlying reader should have been closed", trackingReader.isClosed());
+        Assert.assertTrue("The underlying reader should have been closed", trackingReader.isClosed());
     }
 
     /**
@@ -102,19 +94,13 @@ public class AponReaderCloseableTest {
     /**
      * Tests that attempting to read from a closed reader throws an exception.
      */
-    @Test
+    @Test(expected = IOException.class)
     public void testReadAfterCloseThrowsException() throws AponParseException {
         String apon = "name: value";
         AponReaderCloseable aponReader = new AponReaderCloseable(new StringReader(apon));
         aponReader.read();
         aponReader.close();
-
-        try {
-            aponReader.read();
-            fail("Reading from a closed reader should throw IOException");
-        } catch (IOException e) {
-            // Expected
-        }
+        aponReader.read();
     }
 
 }

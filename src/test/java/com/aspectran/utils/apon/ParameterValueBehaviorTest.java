@@ -15,13 +15,11 @@
  */
 package com.aspectran.utils.apon;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Test cases for behavior of ParameterValue.
@@ -88,10 +86,10 @@ public class ParameterValueBehaviorTest {
         List<?> resultList = params.getArray();
 
         // Assert that the list now contains both the string and the nested list
-        assertEquals(2, resultList.size());
-        assertEquals("value1", resultList.get(0));
-        assertTrue("The second element should be a List", resultList.get(1) instanceof List);
-        assertEquals(nestedList, resultList.get(1));
+        Assert.assertEquals(2, resultList.size());
+        Assert.assertEquals("value1", resultList.get(0));
+        Assert.assertTrue("The second element should be a List", resultList.get(1) instanceof List);
+        Assert.assertEquals(nestedList, resultList.get(1));
 
         // This confirms that the array's dimension was effectively promoted,
         // creating a mixed-type, multi-dimensional structure.
@@ -118,9 +116,9 @@ public class ParameterValueBehaviorTest {
         List<String> resultList = params.getArray();
 
         // Assert that the list contains the original string and a string representation of the nested list
-        assertEquals(2, resultList.size());
-        assertEquals("nested_a", resultList.get(0));
-        assertEquals(nestedList.toString(), resultList.toString());
+        Assert.assertEquals(2, resultList.size());
+        Assert.assertEquals("nested_a", resultList.get(0));
+        Assert.assertEquals(nestedList.toString(), resultList.toString());
     }
 
 }

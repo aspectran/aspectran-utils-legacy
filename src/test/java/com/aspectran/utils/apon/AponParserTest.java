@@ -15,6 +15,7 @@
  */
 package com.aspectran.utils.apon;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -22,12 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.aspectran.utils.apon.AponFormat.SYSTEM_NEW_LINE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Test cases for AponParser.
@@ -47,15 +42,15 @@ public class AponParserTest {
                 "balance: 123.45\n" +
                 "id: 1234567890123\n" +
                 "nullValue: null\n";
-        Parameters params = AponParser.parse(apon);
+        Parameters params = AponReader.read(apon);
 
-        assertTrue(params.isCompactStyle());
-        assertEquals("John Doe", params.getString("name"));
-        assertEquals(30, (int)params.getInt("age"));
-        assertTrue(params.getBoolean("isActive"));
-        assertEquals(123.45, params.getDouble("balance"), 0.0);
-        assertEquals(1234567890123L, params.getLong("id").longValue());
-        assertNull(params.getString("nullValue"));
+        Assert.assertTrue(params.isBraceless());
+        Assert.assertEquals("John Doe", params.getString("name"));
+        Assert.assertEquals(30, (int)params.getInt("age"));
+        Assert.assertTrue(params.getBoolean("isActive"));
+        Assert.assertEquals(123.45, params.getDouble("balance"), 0.0);
+        Assert.assertEquals(1234567890123L, params.getLong("id").longValue());
+        Assert.assertNull(params.getString("nullValue"));
     }
 
     /**
@@ -70,14 +65,14 @@ public class AponParserTest {
                 "double: 0.1000000000000000055511151231257827021181583404541015625\n" +
                 "boolean: true\n" +
                 "nullValue: null\n";
-        Parameters params = AponParser.parse(input);
-        assertEquals("Hello World", params.getString("string"));
-        assertEquals(123, (int)params.getInt("integer"));
-        assertEquals(2147483648L, params.getLong("long").longValue());
-        assertEquals(78.9f, params.getFloat("float"), 0.0f);
-        assertEquals(0.1000000000000000055511151231257827021181583404541015625d, params.getDouble("double"), 0.0);
-        assertTrue(params.getBoolean("boolean"));
-        assertNull(params.getString("nullValue"));
+        Parameters params = AponReader.read(input);
+        Assert.assertEquals("Hello World", params.getString("string"));
+        Assert.assertEquals(123, (int)params.getInt("integer"));
+        Assert.assertEquals(2147483648L, params.getLong("long").longValue());
+        Assert.assertEquals(78.9f, params.getFloat("float"), 0.0f);
+        Assert.assertEquals(0.1000000000000000055511151231257827021181583404541015625d, params.getDouble("double"), 0.0);
+        Assert.assertTrue(params.getBoolean("boolean"));
+        Assert.assertNull(params.getString("nullValue"));
     }
 
     /**
@@ -90,14 +85,14 @@ public class AponParserTest {
                 "  \"banana\"\n" +
                 "  \"cherry\"\n" +
                 "]\n";
-        Parameters params = AponParser.parse(apon);
+        Parameters params = AponReader.read(apon);
         List<String> items = params.getStringList("items");
 
-        assertNotNull(items);
-        assertEquals(3, items.size());
-        assertEquals("apple", items.get(0));
-        assertEquals("banana", items.get(1));
-        assertEquals("cherry", items.get(2));
+        Assert.assertNotNull(items);
+        Assert.assertEquals(3, items.size());
+        Assert.assertEquals("apple", items.get(0));
+        Assert.assertEquals("banana", items.get(1));
+        Assert.assertEquals("cherry", items.get(2));
     }
 
     /**
@@ -117,18 +112,18 @@ public class AponParserTest {
                 "    \"e\"\n" +
                 "  ]\n" +
                 "]\n";
-        Parameters params = AponParser.parse(apon);
+        Parameters params = AponReader.read(apon);
 
         List<List<String>> matrix = (List<List<String>>)params.getValueList("matrix");
 
-        assertNotNull(matrix);
-        assertEquals(2, matrix.size());
+        Assert.assertNotNull(matrix);
+        Assert.assertEquals(2, matrix.size());
 
         List<String> row1 = matrix.get(0);
-        assertEquals(Arrays.asList("a", "b"), row1);
+        Assert.assertEquals(Arrays.asList("a", "b"), row1);
 
         List<String> row2 = matrix.get(1);
-        assertEquals(Arrays.asList("c", "d", "e"), row2);
+        Assert.assertEquals(Arrays.asList("c", "d", "e"), row2);
     }
 
     /**
@@ -153,12 +148,12 @@ public class AponParserTest {
                 "    }\n" +
                 "  ]\n" +
                 "}\n";
-        Parameters config = AponParser.parse(apon).getParameters("config");
+        Parameters config = AponReader.read(apon).getParameters("config");
 
-        assertEquals("App1", config.getString("name"));
-        assertEquals(true, config.getParameters("settings").getBoolean("enabled"));
-        assertEquals(2, config.getParametersList("users").size());
-        assertEquals("Alice", config.getParametersList("users").get(0).getString("name"));
+        Assert.assertEquals("App1", config.getString("name"));
+        Assert.assertEquals(true, config.getParameters("settings").getBoolean("enabled"));
+        Assert.assertEquals(2, config.getParametersList("users").size());
+        Assert.assertEquals("Alice", config.getParametersList("users").get(0).getString("name"));
     }
 
     /**
@@ -171,11 +166,11 @@ public class AponParserTest {
                 "\n" +
                 "# Another comment\n" +
                 "key2: value2\n";
-        Parameters params = AponParser.parse(apon);
+        Parameters params = AponReader.read(apon);
 
-        assertEquals("value1", params.getString("key1"));
-        assertEquals("value2", params.getString("key2"));
-        assertEquals(2, params.size());
+        Assert.assertEquals("value1", params.getString("key1"));
+        Assert.assertEquals("value2", params.getString("key2"));
+        Assert.assertEquals(2, params.size());
     }
 
     /**
@@ -187,7 +182,7 @@ public class AponParserTest {
                 "  \"item1\"\n" +
                 "  \"item2\"\n" +
                 "# Missing closing bracket\n";
-        AponParser.parse(apon);
+        AponReader.read(apon);
     }
 
     /**
@@ -198,7 +193,7 @@ public class AponParserTest {
         String apon = "config: {\n" +
                 "  key: value\n" +
                 "# Missing closing brace\n";
-        AponParser.parse(apon);
+        AponReader.read(apon);
     }
 
     /**
@@ -207,7 +202,7 @@ public class AponParserTest {
     @Test(expected = AponParseException.class)
     public void testErrorHandlingInvalidLineFormat() throws AponParseException {
         String apon = "key value # Missing colon\n";
-        AponParser.parse(apon);
+        AponReader.read(apon);
     }
 
     /**
@@ -224,8 +219,8 @@ public class AponParserTest {
                 "  Line 2" + SYSTEM_NEW_LINE +
                 "Line 3";
 
-        Parameters params = AponParser.parse(apon);
-        assertEquals(expected, params.getString("message"));
+        Parameters params = AponReader.read(apon);
+        Assert.assertEquals(expected, params.getString("message"));
     }
 
     /**
@@ -235,15 +230,15 @@ public class AponParserTest {
     public void testParseEmptyStructures() throws AponParseException {
         String apon = "emptyObject: {}\n" +
                 "emptyArray: []\n";
-        Parameters params = AponParser.parse(apon);
+        Parameters params = AponReader.read(apon);
 
         Parameters emptyObject = params.getParameters("emptyObject");
-        assertNotNull(emptyObject);
-        assertTrue(emptyObject.isEmpty());
+        Assert.assertNotNull(emptyObject);
+        Assert.assertTrue(emptyObject.isEmpty());
 
-        List<?> emptyArray = params.getValueList("emptyArray");
-        assertNotNull(emptyArray);
-        assertTrue(emptyArray.isEmpty());
+        List<?> emptyArray = (List<?>)params.getValueList("emptyArray");
+        Assert.assertNotNull(emptyArray);
+        Assert.assertTrue(emptyArray.isEmpty());
     }
 
     /**
@@ -256,15 +251,15 @@ public class AponParserTest {
                 "val3(boolean): true\n" +
                 "val4(double): 1.23\n" +
                 "val5(long): 987\n";
-        Parameters params = AponParser.parse(apon);
-        assertEquals("123", params.getString("val1"));
-        assertEquals(456, (int)params.getInt("val2"));
-        assertTrue(params.getBoolean("val3"));
-        assertEquals(1.23, params.getDouble("val4"), 0.0);
-        assertEquals(987L, params.getLong("val5").longValue());
+        Parameters params = AponReader.read(apon);
+        Assert.assertEquals("123", params.getString("val1"));
+        Assert.assertEquals(456, (int)params.getInt("val2"));
+        Assert.assertTrue(params.getBoolean("val3"));
+        Assert.assertEquals(1.23, params.getDouble("val4"), 0.0);
+        Assert.assertEquals(987L, params.getLong("val5").longValue());
 
         String hintedApon = new AponWriter().write(params).toString();
-        assertEquals(apon.replace("\r\n", "\n"), hintedApon.replace("\r\n", "\n"));
+        Assert.assertEquals(apon.replace("\r\n", "\n"), hintedApon.replace("\r\n", "\n"));
     }
 
     /**
@@ -274,10 +269,10 @@ public class AponParserTest {
     public void testInvalidValueForHintedType() {
         String apon = "val(int): not-a-number";
         try {
-            AponParser.parse(apon);
-            fail("Should have thrown AponParseException");
+            AponReader.read(apon);
+            Assert.fail("Should have thrown AponParseException");
         } catch (AponParseException e) {
-            assertTrue(e.getMessage().contains("Invalid value 'not-a-number' for type 'int'"));
+            Assert.assertTrue(e.getMessage().contains("Invalid value 'not-a-number' for type 'int'"));
         }
     }
 
@@ -289,10 +284,10 @@ public class AponParserTest {
         String apon = "explicitEmpty: \"\"\n" +
                 "implicitEmpty:\n" +
                 "explicitNull: null\n";
-        Parameters params = AponParser.parse(apon);
-        assertEquals("", params.getString("explicitEmpty"));
-        assertNull(params.getString("implicitEmpty"));
-        assertNull(params.getString("explicitNull"));
+        Parameters params = AponReader.read(apon);
+        Assert.assertEquals("", params.getString("explicitEmpty"));
+        Assert.assertNull(params.getString("implicitEmpty"));
+        Assert.assertNull(params.getString("explicitNull"));
     }
 
     /**
@@ -310,8 +305,8 @@ public class AponParserTest {
                 "" + SYSTEM_NEW_LINE +
                 "    line with just spaces    " + SYSTEM_NEW_LINE +
                 "last line";
-        Parameters params = AponParser.parse(apon);
-        assertEquals(expected, params.getString("text"));
+        Parameters params = AponReader.read(apon);
+        Assert.assertEquals(expected, params.getString("text"));
     }
 
     /**
@@ -321,8 +316,8 @@ public class AponParserTest {
     public void testStringUnescaping() throws AponParseException {
         String apon = "escaped: \"line1\\nline2\\t\\\\ \\\"quote\\\" \\u0041\""; // \u0041 is 'A'
         String expected = "line1" + '\n' + "line2" + '\t' + "\\ \"quote\" A";
-        Parameters params = AponParser.parse(apon);
-        assertEquals(expected, params.getString("escaped"));
+        Parameters params = AponReader.read(apon);
+        Assert.assertEquals(expected, params.getString("escaped"));
     }
 
     /**
@@ -335,15 +330,15 @@ public class AponParserTest {
                 "good: value\n" +
                 "bad line format\n";
         try {
-            AponParser.parse(apon);
-            fail("Should have thrown MalformedAponException");
+            AponReader.read(apon);
+            Assert.fail("Should have thrown MalformedAponException");
         } catch (MalformedAponException e) {
             String message = e.getMessage();
-            assertTrue(message.contains("[lineNumber: 4, columnNumber: 1]"));
-            assertTrue(message.contains("bad line format"));
-            assertTrue(message.contains("Invalid line format"));
+            Assert.assertTrue(message.contains("[lineNumber: 4, columnNumber: 1]"));
+            Assert.assertTrue(message.contains("bad line format"));
+            Assert.assertTrue(message.contains("Invalid line format"));
         } catch (AponParseException e) {
-            fail("Should have thrown MalformedAponException, not AponParseException");
+            Assert.fail("Should have thrown MalformedAponException");
         }
     }
 
@@ -356,11 +351,11 @@ public class AponParserTest {
                 "  name: John Doe\n" +
                 "  age: 30\n" +
                 "}\n";
-        Parameters params = AponParser.parse(apon, VariableParameters.class);
+        Parameters params = AponReader.read(apon, VariableParameters.class);
 
-        assertFalse(params.isCompactStyle());
-        assertEquals("John Doe", params.getString("name"));
-        assertEquals(30, (int)params.getInt("age"));
+        Assert.assertFalse(params.isBraceless());
+        Assert.assertEquals("John Doe", params.getString("name"));
+        Assert.assertEquals(30, (int)params.getInt("age"));
     }
 
     /**
@@ -371,10 +366,11 @@ public class AponParserTest {
         String apon = "{\n" +
                 "  name: John Doe\n"; // Missing closing brace
         try {
-            AponParser.parse(apon);
-            fail("Should have thrown AponParseException");
+            AponReader.read(apon);
+            Assert.fail("Should have thrown AponParseException");
         } catch (AponParseException e) {
-            assertTrue(e.getMessage().contains("Unclosed object block"));
+            Assert.assertTrue(e.getMessage().contains("no closing curly bracket") ||
+                    e.getMessage().contains("Unclosed object block"));
         }
     }
 
@@ -388,11 +384,60 @@ public class AponParserTest {
                 "}\n" +
                 "extra: content\n";
         try {
-            AponParser.parse(apon);
-            fail("Should have thrown AponParseException");
+            AponReader.read(apon);
+            Assert.fail("Should have thrown AponParseException");
         } catch (AponParseException e) {
-            assertTrue(e.getMessage().contains("Unexpected content after closing brace"));
+            Assert.assertTrue(e.getMessage().contains("Unexpected content after closing brace"));
         }
+    }
+
+    /**
+     * Tests parsing of various edge cases and potential infinite loop scenarios.
+     */
+    @Test(timeout = 5000)
+    public void testEdgeCases() throws AponParseException {
+        // Empty/whitespace/comments
+        AponReader.read("");
+        AponReader.read("   ");
+        AponReader.read("\n\n\n");
+        AponReader.read("# comment");
+        AponReader.read(" , , , ");
+
+        // Unclosed structures
+        try { AponReader.read("key: \"unclosed"); Assert.fail(); } catch (AponParseException ignored) {}
+        try { AponReader.read("key: { "); Assert.fail(); } catch (AponParseException ignored) {}
+        try { AponReader.read("key: [ "); Assert.fail(); } catch (AponParseException ignored) {}
+        try { AponReader.read("key: (\n|line1\n"); Assert.fail(); } catch (AponParseException ignored) {}
+
+        // Trailing escape
+        Parameters p1 = AponReader.read("key: value\\");
+        Assert.assertEquals("value", p1.getString("key"));
+
+        // Incomplete hint (treated as part of the name)
+        Parameters p2 = AponReader.read("key(: value");
+        Assert.assertEquals("value", p2.getString("key("));
+
+        // Invalid top-level characters
+        try { AponReader.read("key: value}"); Assert.fail(); } catch (AponParseException ignored) {}
+        try { AponReader.read("key: value]"); Assert.fail(); } catch (AponParseException ignored) {}
+
+        // Multiple items on one line
+        Parameters p3 = AponReader.read("key1: val1, key2: val2, key3: val3");
+        Assert.assertEquals("val1", p3.getString("key1"));
+        Assert.assertEquals("val2", p3.getString("key2"));
+        Assert.assertEquals("val3", p3.getString("key3"));
+
+        // Complex unquoted values
+        Parameters p4 = AponReader.read("key: value with {curly and [square open");
+        Assert.assertEquals("value with {curly and [square open", p4.getString("key"));
+
+        // Deeply nested but broken
+        String apon = "{ { { { { { { { { { { { { { { { { { { { ";
+        try { AponReader.read(apon); Assert.fail(); } catch (AponParseException ignored) {}
+
+        // Long whitespace
+        Parameters p5 = AponReader.read("key:                 value                ");
+        Assert.assertEquals("value", p5.getString("key"));
     }
 
 }

@@ -15,11 +15,10 @@
  */
 package com.aspectran.utils.apon;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Test cases for AponLines.
@@ -36,11 +35,11 @@ public class AponLinesTest {
         AponLines aponLines1 = new AponLines()
                 .line("name", "value")
                 .line("number", 9999)
-                .line("text", "(")
+                .raw("text: (")
                 .raw("|text-line-1")
                 .raw("|text-line-2")
                 .raw(")")
-                .line("block", "{")
+                .raw("block: {")
                 .line("nested", "block")
                 .raw("}")
                 .raw("count: [")
@@ -85,7 +84,7 @@ public class AponLinesTest {
                 ;
         String apon2 = aponLines2.toString();
 
-        assertEquals(apon1, apon2);
+        Assert.assertEquals(apon1, apon2);
     }
 
     /**
@@ -96,11 +95,11 @@ public class AponLinesTest {
         AponLines aponLines1 = new AponLines()
                 .line("name", "value")
                 .line("number", 9999)
-                .line("text", "(")
+                .raw("text: (")
                 .raw("|text-line-1")
                 .raw("|text-line-2")
                 .raw(")")
-                .line("block", "{")
+                .raw("block: {")
                 .line("nested", "block")
                 .raw("}")
                 .raw("count: [")
@@ -145,7 +144,7 @@ public class AponLinesTest {
                 ;
         String apon2 = aponLines2.format();
 
-        assertEquals(apon1, apon2);
+        Assert.assertEquals(apon1, apon2);
     }
 
     /**
@@ -154,8 +153,8 @@ public class AponLinesTest {
     @Test
     public void testEmptyApon() throws IOException {
         AponLines aponLines = new AponLines();
-        assertEquals("", aponLines.toString());
-        assertEquals("", aponLines.format());
+        Assert.assertEquals("", aponLines.toString());
+        Assert.assertEquals("", aponLines.format());
     }
 
     /**
@@ -175,8 +174,8 @@ public class AponLinesTest {
                 "age: 30\n" +
                 "isStudent: false\n";
 
-        assertEquals(expectedString, aponLines.toString().replace("\r\n", "\n"));
-        assertEquals(expectedFormat, aponLines.format().replace("\r\n", "\n"));
+        Assert.assertEquals(expectedString, aponLines.toString().replace("\r\n", "\n"));
+        Assert.assertEquals(expectedFormat, aponLines.format().replace("\r\n", "\n"));
     }
 
     /**
@@ -227,7 +226,7 @@ public class AponLinesTest {
                 "  ]\n" +
                 "}\n";
 
-        assertEquals(expected.replace("\r\n", "\n"), aponLines.format().replace("\r\n", "\n"));
+        Assert.assertEquals(expected.replace("\r\n", "\n"), aponLines.format().replace("\r\n", "\n"));
     }
 
     /**
@@ -245,7 +244,7 @@ public class AponLinesTest {
                 "  |line2\n" +
                 ")\n";
 
-        assertEquals(expectedFormat.replace("\r\n", "\n"), aponLines.format().replace("\r\n", "\n"));
+        Assert.assertEquals(expectedFormat.replace("\r\n", "\n"), aponLines.format().replace("\r\n", "\n"));
     }
 
 }

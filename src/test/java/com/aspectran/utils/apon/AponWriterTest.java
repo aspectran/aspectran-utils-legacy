@@ -15,17 +15,17 @@
  */
 package com.aspectran.utils.apon;
 
+import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Test cases for AponWriter.
@@ -34,15 +34,23 @@ import static org.junit.Assert.assertTrue;
  */
 public class AponWriterTest {
 
-    /**
-     * Tests the write-read cycle for various strings that may require special handling.
-     */
-    @Test
-    public void testWriteAndReadBackSpecialStrings() throws IOException {
-        String[] inputValues = {
-                "'", "\"", " s ", "\u2019", "\\u2019", "a:b", "{c}", "[d]"
-        };
-        for (String inputValue : inputValues) {
+    @RunWith(Parameterized.class)
+    public static class SpecialStringsTest {
+        private final String inputValue;
+
+        public SpecialStringsTest(String inputValue) {
+            this.inputValue = inputValue;
+        }
+
+        @Parameterized.Parameters
+        public static Collection<Object[]> data() {
+            return Arrays.asList(new Object[][]{
+                    {"'"}, {"\""}, {" s "}, {"\u2019"}, {"\\u2019"}, {"a:b"}, {"{c}"}, {"[d]"}
+            });
+        }
+
+        @Test
+        public void testWriteAndReadBackSpecialStrings() throws IOException {
             Parameters parameters = new VariableParameters();
             parameters.putValue("param1", inputValue);
 
@@ -51,7 +59,7 @@ public class AponWriterTest {
 
             Parameters output = new AponReader(stringWriter.toString()).read();
 
-            assertEquals(inputValue, output.getString("param1"));
+            Assert.assertEquals(inputValue, output.getString("param1"));
         }
     }
 
@@ -69,11 +77,11 @@ public class AponWriterTest {
         StringWriter stringWriter = new StringWriter();
         new AponWriter(stringWriter).write(parameters);
         String apon = stringWriter.toString();
-        assertTrue(apon.contains("(\n".replace("\n", AponFormat.SYSTEM_NEW_LINE)));
-        assertTrue(apon.contains("|1\n".replace("\n", AponFormat.SYSTEM_NEW_LINE)));
+        Assert.assertTrue(apon.contains("(\n".replace("\n", AponFormat.SYSTEM_NEW_LINE)));
+        Assert.assertTrue(apon.contains("|1\n".replace("\n", AponFormat.SYSTEM_NEW_LINE)));
 
         Parameters output = new AponReader(apon).read();
-        assertEquals(input, output.getString("textParam"));
+        Assert.assertEquals(input, output.getString("textParam"));
     }
 
     /**
@@ -91,12 +99,12 @@ public class AponWriterTest {
         String apon = new AponWriter().enableValueTypeHints(true).write(params).toString();
         Parameters readParams = AponReader.read(apon);
 
-        assertEquals(true, readParams.getBoolean("boolean"));
-        assertEquals(123, (int)readParams.getInt("integer"));
-        assertEquals(456L, readParams.getLong("long").longValue());
-        assertEquals(78.9, readParams.getDouble("double"), 0.0);
-        assertTrue(readParams.hasParameter("nullValue"));
-        assertNull(null, readParams.getString("nullValue"));
+        Assert.assertEquals(true, readParams.getBoolean("boolean"));
+        Assert.assertEquals(123, (int)readParams.getInt("integer"));
+        Assert.assertEquals(456L, readParams.getLong("long").longValue());
+        Assert.assertEquals(78.9, readParams.getDouble("double"), 0.0);
+        Assert.assertTrue(readParams.hasParameter("nullValue"));
+        Assert.assertNull(readParams.getString("nullValue"));
     }
 
     /**
@@ -114,8 +122,8 @@ public class AponWriterTest {
         String apon = new AponWriter().write(params).toString();
         Parameters readParams = AponReader.read(apon);
 
-        assertEquals("value", readParams.getParameters("block").getString("key"));
-        assertEquals(list, readParams.getStringList("array"));
+        Assert.assertEquals("value", readParams.getParameters("block").getString("key"));
+        Assert.assertEquals(list, readParams.getStringList("array"));
     }
 
     /**
@@ -130,12 +138,12 @@ public class AponWriterTest {
         // When nullWritable is false (default), null values are omitted
         AponWriter writer1 = new AponWriter().nullWritable(false);
         String apon1 = writer1.write(params).toString();
-        assertFalse(apon1.contains("nullKey"));
+        Assert.assertFalse(apon1.contains("nullKey"));
 
         // When nullWritable is true, null values are included
         AponWriter writer2 = new AponWriter().nullWritable(true);
         String apon2 = writer2.write(params).toString();
-        assertTrue(apon2.contains("nullKey: null"));
+        Assert.assertTrue(apon2.contains("nullKey: null"));
     }
 
     /**
@@ -149,11 +157,11 @@ public class AponWriterTest {
 
         // When nullWritable is false, null values are omitted
         String apon1 = params.toString(false);
-        assertFalse(apon1.contains("nullKey"));
+        Assert.assertFalse(apon1.contains("nullKey"));
 
         // When nullWritable is true, null values are included
         String apon2 = params.toString(true);
-        assertTrue(apon2.contains("nullKey"));
+        Assert.assertTrue(apon2.contains("nullKey"));
     }
 
     /**
@@ -172,33 +180,119 @@ public class AponWriterTest {
         String expected = "nested: {\n" +
                 "  key: value\n" +
                 "}\n";
-        assertEquals(expected.replace("\r\n", "\n"), apon.replace("\r\n", "\n"));
+        Assert.assertEquals(expected.replace("\r\n", "\n"), apon.replace("\r\n", "\n"));
     }
 
     @Test
     public void testCompactWritingOfEmptyStructures() throws IOException {
         Parameters params = new VariableParameters();
         params.putValue("emptyBlock", new VariableParameters());
-        params.putValue("emptyArray", new java.util.ArrayList<String>());
+        params.putValue("emptyArray", new ArrayList<String>());
 
         String expected = "emptyBlock: {}\n" +
                 "emptyArray: []\n";
-        assertEquals(expected.replace("\r\n", "\n"), params.toString().replace("\r\n", "\n"));
+        Assert.assertEquals(expected.replace("\r\n", "\n"), params.toString().replace("\r\n", "\n"));
 
         // Test with prettyPrint = false
         AponWriter compactWriter = new AponWriter().prettyPrint(false);
         String compactApon = compactWriter.write(params).toString();
-        String expectedCompact = "emptyBlock:{}\nemptyArray:[]\n";
-        assertEquals(expectedCompact.replace("\n", AponFormat.SYSTEM_NEW_LINE), compactApon);
+        String expectedCompact = "emptyBlock:{},emptyArray:[]";
+        Assert.assertEquals(expectedCompact, compactApon);
 
         // Test with prettyPrint = true (default)
-        params.setCompactStyle(false);
+        params.setBraceless(false);
         AponWriter noCompactWriter = new AponWriter();
         String noCompactApon = noCompactWriter.write(params).toString();
-        assertFalse(noCompactApon.contains("emptyBlock:{}"));
-        assertFalse(noCompactApon.contains("emptyArray:[]"));
-        assertTrue(noCompactApon.contains("emptyBlock: {\n  }".replace("\n", AponFormat.SYSTEM_NEW_LINE)));
-        assertTrue(noCompactApon.contains("emptyArray: [\n  ]".replace("\n", AponFormat.SYSTEM_NEW_LINE)));
+        Assert.assertFalse(noCompactApon.contains("emptyBlock:{}"));
+        Assert.assertFalse(noCompactApon.contains("emptyArray:[]"));
+        Assert.assertTrue(noCompactApon.contains("emptyBlock: {}"));
+        Assert.assertTrue(noCompactApon.contains("emptyArray: []"));
+    }
+
+    @Test
+    public void testCompactObject() throws IOException {
+        Parameters params = new VariableParameters();
+        params.putValue("name", "John");
+        params.putValue("age", 30);
+        params.setRenderStyle(AponRenderStyle.COMPACT);
+
+        AponWriter writer = new AponWriter();
+        String apon = writer.write(params).toString();
+        Assert.assertEquals("name:John,age:30", apon);
+    }
+
+    @Test
+    public void testStringifyContext() throws IOException {
+        Parameters params = new VariableParameters();
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.set(2026, 2, 29, 16, 30, 0);
+        cal.set(java.util.Calendar.MILLISECOND, 0);
+        java.util.Date date = cal.getTime();
+        params.putValue("dateTime", date);
+
+        com.aspectran.utils.StringifyContext context = new com.aspectran.utils.StringifyContext();
+        context.setDateTimeFormat("yyyy-MM-dd HH:mm:ss");
+        context.setPrettyPrint(false);
+
+        AponWriter writer = new AponWriter().apply(context);
+        String apon = writer.write(params).toString();
+
+        Assert.assertEquals("dateTime:\"2026-03-29 16:30:00\"", apon);
+    }
+
+    /**
+     * Tests that unassigned array parameters are not written as empty arrays.
+     */
+    @Test
+    public void testUnassignedArrayParameters() throws IOException {
+        LocalTestParameters params = new LocalTestParameters();
+        // None of the parameters are assigned.
+
+        // When nullWritable is false (default), unassigned parameters are omitted
+        String apon1 = new AponWriter().nullWritable(false).write(params).toString();
+        Assert.assertEquals("", apon1.trim());
+
+        // When nullWritable is true, unassigned parameters are written as null
+        String apon2 = new AponWriter().nullWritable(true).write(params).toString();
+        Assert.assertTrue(apon2.contains("methods: null"));
+        Assert.assertTrue(apon2.contains("headers: null"));
+        Assert.assertTrue(apon2.contains("pointcut: null"));
+        Assert.assertFalse(apon2.contains("[]"));
+    }
+
+    private static class LocalTestParameters extends DefaultParameters {
+        static final ParameterKey methods = new ParameterKey("methods", ValueType.STRING, true);
+        static final ParameterKey headers = new ParameterKey("headers", ValueType.STRING, true);
+        static final ParameterKey pointcut = new ParameterKey("pointcut", VariableParameters.class, true);
+        static final ParameterKey[] parameterKeys = new ParameterKey[] { methods, headers, pointcut };
+        LocalTestParameters() { super(parameterKeys); }
+    }
+
+    /**
+     * Tests that explicitly assigned empty arrays are still written as empty arrays [].
+     */
+    @Test
+    public void testAssignedEmptyArrayParameters() throws IOException {
+        TestParameters params = new TestParameters();
+        params.putValue(TestParameters.methods, new ArrayList<String>());
+        // The parameter is explicitly assigned an empty list.
+        Assert.assertTrue(params.getParameter(TestParameters.methods).isAssigned());
+
+        String apon = new AponWriter().write(params).toString();
+        Assert.assertTrue(apon.contains("methods: []"));
+
+        TestParameters params2 = AponReader.read(apon, TestParameters.class);
+        String apon2 = new AponWriter().write(params2).toString();
+        Assert.assertTrue(apon2.contains("methods: []"));
+    }
+
+    public static class TestParameters extends DefaultParameters {
+        static final ParameterKey methods = new ParameterKey("methods", ValueType.STRING, true, true);
+        static final ParameterKey[] parameterKeys = new ParameterKey[]{methods};
+
+        public TestParameters() {
+            super(parameterKeys);
+        }
     }
 
 }

@@ -15,17 +15,12 @@
  */
 package com.aspectran.utils.apon;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Test cases for converting JSON to APON Parameters.
@@ -57,12 +52,12 @@ public class JsonToParametersTest {
                 "]\n";
 
         ArrayParameters params = JsonToParameters.from(json, ArrayParameters.class);
-        assertEquals(3, params.getParametersList().size());
-        assertEquals(111, (int)params.getParametersList().get(0).getInt("param1"));
-        assertEquals(222, (int)params.getParametersList().get(0).getInt("param2"));
-        assertEquals(333, (int)params.getParametersList().get(1).getInt("param3"));
-        assertEquals(444, (int)params.getParametersList().get(1).getInt("param4"));
-        assertEquals(apon.replace("\r\n", "\n"), params.toString().replace("\r\n", "\n"));
+        Assert.assertEquals(3, params.getParametersList().size());
+        Assert.assertEquals(111, (int)params.getParametersList().get(0).getInt("param1"));
+        Assert.assertEquals(222, (int)params.getParametersList().get(0).getInt("param2"));
+        Assert.assertEquals(333, (int)params.getParametersList().get(1).getInt("param3"));
+        Assert.assertEquals(444, (int)params.getParametersList().get(1).getInt("param4"));
+        Assert.assertEquals(apon.replace("\r\n", "\n"), params.toString().replace("\r\n", "\n"));
     }
 
     /**
@@ -87,13 +82,13 @@ public class JsonToParametersTest {
 
         Parameters params = JsonToParameters.from(json);
         Parameters glossary = params.getParameters("glossary");
-        assertNotNull(glossary);
-        assertEquals("example glossary", glossary.getString("title"));
+        Assert.assertNotNull(glossary);
+        Assert.assertEquals("example glossary", glossary.getString("title"));
 
         Parameters glossEntry = glossary.getParameters("GlossDiv").getParameters("GlossList").getParameters("GlossEntry");
-        assertNotNull(glossEntry);
-        assertEquals("SGML", glossEntry.getString("ID"));
-        assertEquals(Arrays.asList("GML", "XML"), glossEntry.getStringList("GlossSeeAlso"));
+        Assert.assertNotNull(glossEntry);
+        Assert.assertEquals("SGML", glossEntry.getString("ID"));
+        Assert.assertEquals(Arrays.asList("GML", "XML"), glossEntry.getStringList("GlossSeeAlso"));
     }
 
     /**
@@ -104,12 +99,12 @@ public class JsonToParametersTest {
         String json = "{\"message\": \"line1\\nline2\"}";
 
         MessagePayload messagePayload = JsonToParameters.from(json, MessagePayload.class);
-        assertEquals("line1\nline2", messagePayload.getContent());
+        Assert.assertEquals("line1\nline2", messagePayload.getContent());
 
         // Verify that the converted object can be read back by AponReader
         String apon = messagePayload.toString();
         MessagePayload rereadPayload = new AponReader(apon).read(new MessagePayload());
-        assertEquals(messagePayload.getContent(), rereadPayload.getContent());
+        Assert.assertEquals(messagePayload.getContent(), rereadPayload.getContent());
     }
 
     public static class MessagePayload extends DefaultParameters {
@@ -161,42 +156,42 @@ public class JsonToParametersTest {
 
         Parameters parameters = JsonToParameters.from(json);
         List<Parameters> arrayObject1 = parameters.getParametersList("arrayObject1");
-        assertEquals(1, arrayObject1.size());
-        assertEquals("value1", arrayObject1.get(0).getString("key1"));
+        Assert.assertEquals(1, arrayObject1.size());
+        Assert.assertEquals("value1", arrayObject1.get(0).getString("key1"));
 
         List<Parameters> arrayObject2 = parameters.getParametersList("arrayObject2");
-        assertNotNull(arrayObject2);
-        assertEquals(2, arrayObject2.size());
-        assertEquals("value2-1", arrayObject2.get(0).getString("key2-1"));
-        assertEquals("value2-2", arrayObject2.get(1).getString("key2-2"));
+        Assert.assertNotNull(arrayObject2);
+        Assert.assertEquals(2, arrayObject2.size());
+        Assert.assertEquals("value2-1", arrayObject2.get(0).getString("key2-1"));
+        Assert.assertEquals("value2-2", arrayObject2.get(1).getString("key2-2"));
 
         List<String> arrayString1 = parameters.getStringList("arrayString1");
-        assertEquals(1, arrayString1.size());
-        assertEquals("str1", arrayString1.get(0));
+        Assert.assertEquals(1, arrayString1.size());
+        Assert.assertEquals("str1", arrayString1.get(0));
 
         List<String> arrayString2 = parameters.getStringList("arrayString2");
-        assertEquals(2, arrayString2.size());
-        assertEquals("str1", arrayString2.get(0));
-        assertEquals("str2", arrayString2.get(1));
+        Assert.assertEquals(2, arrayString2.size());
+        Assert.assertEquals("str1", arrayString2.get(0));
+        Assert.assertEquals("str2", arrayString2.get(1));
 
         List<String> arrayStringWithNull = parameters.getStringList("arrayStringWithNull");
-        assertEquals(2, arrayStringWithNull.size());
-        assertEquals("str1", arrayStringWithNull.get(0));
-        assertNull(arrayStringWithNull.get(1));
+        Assert.assertEquals(2, arrayStringWithNull.size());
+        Assert.assertEquals("str1", arrayStringWithNull.get(0));
+        Assert.assertNull(arrayStringWithNull.get(1));
 
         List<String> arrayNullWithString = parameters.getStringList("arrayNullWithString");
-        assertEquals(2, arrayNullWithString.size());
-        assertNull(arrayNullWithString.get(0));
-        assertEquals("str2", arrayNullWithString.get(1));
+        Assert.assertEquals(2, arrayNullWithString.size());
+        Assert.assertNull(arrayNullWithString.get(0));
+        Assert.assertEquals("str2", arrayNullWithString.get(1));
 
         List<Integer> arrayInt1 = parameters.getIntList("arrayInt1");
-        assertEquals(1, arrayInt1.size());
-        assertEquals(Integer.valueOf(1), arrayInt1.get(0));
+        Assert.assertEquals(1, arrayInt1.size());
+        Assert.assertEquals(Integer.valueOf(1), arrayInt1.get(0));
 
         List<Integer> arrayInt2 = parameters.getIntList("arrayInt2");
-        assertEquals(2, arrayInt2.size());
-        assertEquals(Integer.valueOf(1), arrayInt2.get(0));
-        assertEquals(Integer.valueOf(2), arrayInt2.get(1));
+        Assert.assertEquals(2, arrayInt2.size());
+        Assert.assertEquals(Integer.valueOf(1), arrayInt2.get(0));
+        Assert.assertEquals(Integer.valueOf(2), arrayInt2.get(1));
     }
 
     /**
@@ -214,13 +209,13 @@ public class JsonToParametersTest {
                 "  \"nullValue\": null\n" +
                 "}\n";
         Parameters params = JsonToParameters.from(json);
-        assertEquals("hello", params.getString("string"));
-        assertEquals(123, (int)params.getInt("integer"));
-        assertEquals(1234567890123L, params.getLong("long").longValue());
-        assertEquals(45.67, params.getDouble("float"), 0.0001); // Assert as double, with a delta for float comparison
-        assertEquals(98.76, params.getDouble("double"), 0.0001);
-        assertTrue(params.getBoolean("boolean"));
-        assertNull(params.getString("nullValue"));
+        Assert.assertEquals("hello", params.getString("string"));
+        Assert.assertEquals(123, (int)params.getInt("integer"));
+        Assert.assertEquals(1234567890123L, params.getLong("long").longValue());
+        Assert.assertEquals(45.67, params.getDouble("float"), 0.0001); // Assert as double, with a delta for float comparison
+        Assert.assertEquals(98.76, params.getDouble("double"), 0.0001);
+        Assert.assertTrue(params.getBoolean("boolean"));
+        Assert.assertNull(params.getString("nullValue"));
     }
 
     /**
@@ -230,11 +225,11 @@ public class JsonToParametersTest {
     public void testEmptyJsonStructures() throws IOException {
         // Empty object
         Parameters p1 = JsonToParameters.from("{}");
-        assertTrue(p1.isEmpty());
+        Assert.assertTrue(p1.isEmpty());
 
         // Empty array
         Parameters p2 = JsonToParameters.from("{\"emptyArray\":[]}");
-        assertTrue(p2.getValueList("emptyArray").isEmpty());
+        Assert.assertTrue(p2.getValueList("emptyArray").isEmpty());
     }
 
     /**
@@ -244,27 +239,27 @@ public class JsonToParametersTest {
     public void testLenientParsing() throws IOException {
         // Lenient mode should parse non-standard JSON
         Parameters p1 = JsonToParameters.from("{ key: 'value' }", true);
-        assertEquals("value", p1.getString("key"));
+        Assert.assertEquals("value", p1.getString("key"));
 
         Parameters p2 = JsonToParameters.from("{ \"key\": \"value\", }", true);
-        assertEquals("value", p2.getString("key"));
+        Assert.assertEquals("value", p2.getString("key"));
 
         // Strict mode (default) should fail
         try {
             JsonToParameters.from("{ key: 'value' }");
-            fail("Should have thrown IOException");
+            Assert.fail("Should have thrown IOException");
         } catch (IOException e) {
             // Expected
         }
         try {
             JsonToParameters.from("{ \"key\": \"value\", }");
-            fail("Should have thrown IOException");
+            Assert.fail("Should have thrown IOException");
         } catch (IOException e) {
             // Expected
         }
         try {
             JsonToParameters.from("not json");
-            fail("Should have thrown IOException");
+            Assert.fail("Should have thrown IOException");
         } catch (IOException e) {
             // Expected
         }
@@ -275,7 +270,7 @@ public class JsonToParametersTest {
         String json = "{\"floatValue\": 45.67}";
 
         TypedPayload payload = JsonToParameters.from(json, TypedPayload.class);
-        assertEquals(45.67f, payload.getFloatValue(), 0.001f);
+        Assert.assertEquals(45.67f, payload.getFloatValue(), 0.001f);
     }
 
     public static class TypedPayload extends DefaultParameters {
@@ -297,7 +292,7 @@ public class JsonToParametersTest {
         Parameters parameters = JsonToParameters.from(json);
         String expected = "name: \"she's\"";
         String actual = parameters.toString().trim();
-        assertEquals(expected, actual);
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -361,7 +356,7 @@ public class JsonToParametersTest {
                 .write(parameters)
                 .toString();
 
-        assertEquals(expected, actual);
+        Assert.assertEquals(expected, actual);
     }
 
     /**
@@ -406,40 +401,40 @@ public class JsonToParametersTest {
         apon = apon.replace("\n", AponFormat.SYSTEM_NEW_LINE);
 
         Parameters parameters = JsonToParameters.from(json);
-        assertNotNull(parameters);
+        Assert.assertNotNull(parameters);
 
         // Test matrix (array of string arrays)
         List<List<String>> matrix = (List<List<String>>)parameters.getValueList("matrix");
-        assertNotNull(matrix);
-        assertEquals(2, matrix.size());
+        Assert.assertNotNull(matrix);
+        Assert.assertEquals(2, matrix.size());
 
         List<String> row1 = matrix.get(0);
-        assertNotNull(row1);
-        assertEquals(Arrays.asList("a", "b"), row1);
+        Assert.assertNotNull(row1);
+        Assert.assertEquals(Arrays.asList("a", "b"), row1);
 
         List<String> row2 = matrix.get(1);
-        assertNotNull(row2);
-        assertEquals(Arrays.asList("c", "d", "e"), row2);
+        Assert.assertNotNull(row2);
+        Assert.assertEquals(Arrays.asList("c", "d", "e"), row2);
 
         // Test numbers (array of integer arrays)
         List<List<Integer>> numbers = (List<List<Integer>>)parameters.getValueList("numbers");
-        assertNotNull(numbers);
-        assertEquals(2, numbers.size());
+        Assert.assertNotNull(numbers);
+        Assert.assertEquals(2, numbers.size());
 
         List<Integer> numRow1 = numbers.get(0);
-        assertNotNull(numRow1);
-        assertEquals(Arrays.asList(1, 2), numRow1);
+        Assert.assertNotNull(numRow1);
+        Assert.assertEquals(Arrays.asList(1, 2), numRow1);
 
         List<Integer> numRow2 = numbers.get(1);
-        assertNotNull(numRow2);
-        assertEquals(Arrays.asList(3, 4, 5), numRow2);
+        Assert.assertNotNull(numRow2);
+        Assert.assertEquals(Arrays.asList(3, 4, 5), numRow2);
 
         String actualApon = new AponWriter()
                 .nullWritable(true)
                 .write(parameters)
                 .toString();
 
-        assertEquals(apon, actualApon);
+        Assert.assertEquals(apon, actualApon);
     }
 
     /**
@@ -492,47 +487,47 @@ public class JsonToParametersTest {
         // The parser will create VariableParameters instances for the JSON objects.
         // The test will verify that their content matches the LocationParameters structure.
         Parameters parameters = JsonToParameters.from(json);
-        assertNotNull(parameters);
+        Assert.assertNotNull(parameters);
 
         // Retrieve the 3D list
         List<List<List<Object>>> dataCube = (List<List<List<Object>>>) parameters.getValueList("dataCube");
-        assertNotNull(dataCube);
+        Assert.assertNotNull(dataCube);
 
         // Assert dimensions
-        assertEquals(2, dataCube.size()); // 1st dimension
-        assertEquals(2, dataCube.get(0).size()); // 2nd dimension in first element
-        assertEquals(1, dataCube.get(1).size()); // 2nd dimension in second element
-        assertEquals(3, dataCube.get(0).get(0).size()); // 3rd dimension (innermost)
+        Assert.assertEquals(2, dataCube.size()); // 1st dimension
+        Assert.assertEquals(2, dataCube.get(0).size()); // 2nd dimension in first element
+        Assert.assertEquals(1, dataCube.get(1).size()); // 2nd dimension in second element
+        Assert.assertEquals(3, dataCube.get(0).get(0).size()); // 3rd dimension (innermost)
 
         // Assert contents of the first innermost array: [ {location}, "DataPoint1", null ]
         List<Object> innerArray1 = dataCube.get(0).get(0);
-        assertTrue(innerArray1.get(0) instanceof Parameters);
+        Assert.assertTrue(innerArray1.get(0) instanceof Parameters);
         Parameters location1 = (Parameters) innerArray1.get(0);
-        assertEquals(101, (int)location1.getInt("id"));
-        assertEquals("Seoul", location1.getString("name"));
-        assertEquals("City", location1.getString("type"));
+        Assert.assertEquals(101, (int)location1.getInt("id"));
+        Assert.assertEquals("Seoul", location1.getString("name"));
+        Assert.assertEquals("City", location1.getString("type"));
 
-        assertEquals("DataPoint1", innerArray1.get(1));
-        assertNull(innerArray1.get(2));
+        Assert.assertEquals("DataPoint1", innerArray1.get(1));
+        Assert.assertNull(innerArray1.get(2));
 
         // Assert contents of the second innermost array: [ {location} ]
         List<Object> innerArray2 = dataCube.get(0).get(1);
-        assertEquals(1, innerArray2.size());
-        assertTrue(innerArray2.get(0) instanceof Parameters);
+        Assert.assertEquals(1, innerArray2.size());
+        Assert.assertTrue(innerArray2.get(0) instanceof Parameters);
         Parameters location2 = (Parameters) innerArray2.get(0);
-        assertEquals(202, (int)location2.getInt("id"));
-        assertEquals("Busan", location2.getString("name"));
-        assertEquals("City", location2.getString("type"));
+        Assert.assertEquals(202, (int)location2.getInt("id"));
+        Assert.assertEquals("Busan", location2.getString("name"));
+        Assert.assertEquals("City", location2.getString("type"));
 
         // Assert contents of the third innermost array: [ "DataPoint2", {location} ]
         List<Object> innerArray3 = dataCube.get(1).get(0);
-        assertEquals(2, innerArray3.size());
-        assertEquals("DataPoint2", innerArray3.get(0));
-        assertTrue(innerArray3.get(1) instanceof Parameters);
+        Assert.assertEquals(2, innerArray3.size());
+        Assert.assertEquals("DataPoint2", innerArray3.get(0));
+        Assert.assertTrue(innerArray3.get(1) instanceof Parameters);
         Parameters location3 = (Parameters) innerArray3.get(1);
-        assertEquals(303, (int)location3.getInt("id"));
-        assertEquals("Jeju", location3.getString("name"));
-        assertEquals("Island", location3.getString("type"));
+        Assert.assertEquals(303, (int)location3.getInt("id"));
+        Assert.assertEquals("Jeju", location3.getString("name"));
+        Assert.assertEquals("Island", location3.getString("type"));
     }
 
     public static class LocationListParameters extends DefaultParameters {
@@ -567,26 +562,26 @@ public class JsonToParametersTest {
         // Parse the JSON using LocationListParameters as the schema.
         // The parser will now know that 'id' should be a Long, as defined in LocationParameters.
         LocationListParameters params = JsonToParameters.from(json, LocationListParameters.class);
-        assertNotNull(params);
+        Assert.assertNotNull(params);
 
         List<LocationParameters> locations = params.getLocations();
-        assertNotNull(locations);
-        assertEquals(2, locations.size());
+        Assert.assertNotNull(locations);
+        Assert.assertEquals(2, locations.size());
 
         // Verify the first location
         LocationParameters location1 = locations.get(0);
-        assertNotNull(location1);
+        Assert.assertNotNull(location1);
         // Now getLong() works without exception, because the parser was guided by the schema.
-        assertEquals(101L, location1.getLong("id").longValue());
-        assertEquals("Seoul", location1.getString("name"));
-        assertEquals("City", location1.getString("type"));
+        Assert.assertEquals(101L, location1.getLong("id").longValue());
+        Assert.assertEquals("Seoul", location1.getString("name"));
+        Assert.assertEquals("City", location1.getString("type"));
 
         // Verify the second location with a number that would fit in Long but not Integer
         LocationParameters location2 = locations.get(1);
-        assertNotNull(location2);
-        assertEquals(9999999999L, location2.getLong("id").longValue());
-        assertEquals("Big City", location2.getString("name"));
-        assertEquals("Mega", location2.getString("type"));
+        Assert.assertNotNull(location2);
+        Assert.assertEquals(9999999999L, location2.getLong("id").longValue());
+        Assert.assertEquals("Big City", location2.getString("name"));
+        Assert.assertEquals("Mega", location2.getString("type"));
     }
 
 }

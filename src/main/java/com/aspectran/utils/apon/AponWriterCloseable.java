@@ -15,42 +15,58 @@
  */
 package com.aspectran.utils.apon;
 
+import com.aspectran.utils.annotation.jsr305.NonNull;
+
+import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.Charset;
 
 /**
- * A {@link AponWriter} variant that implements {@link Closeable} for use with
+ * An {@link AponWriter} variant that implements {@link Closeable} for use with
  * try-with-resources blocks.
- * <p>
- * Example:
+ * <p>This class enables automatic resource management of the underlying output
+ * stream or file while serializing {@link Parameters} objects into APON format.</p>
+ *
+ * <p>Example usage:</p>
  * <pre>{@code
- * try (AponWriterCloseable writer = new AponWriterCloseable(myWriter)) {
- *     writer.write(parameters);
+ * try (AponWriterCloseable writer = new AponWriterCloseable(Paths.get("output.apon"))) {
+ *     writer.write(params);
  * }
- * }
- * </pre>
- * </p>
+ * }</pre>
  */
 public class AponWriterCloseable extends AponWriter implements Closeable {
 
     /**
-     * Instantiates a new AponWriter.
-     * Pretty printing is enabled by default, and the indent string is
-     * set to "  " (two spaces).
-     * @param file a File object to write to
+     * Instantiates a new AponWriterCloseable that writes to the specified file.
+     * <p>Pretty printing is enabled by default with two-space indentation.</p>
+     * @param file the file to write to
      * @throws IOException if an I/O error occurs
      */
-    public AponWriterCloseable(File file) throws IOException {
-        super(file);
+    public AponWriterCloseable(@NonNull File file) throws IOException {
+        this(new BufferedWriter(new FileWriter(file)));
     }
 
     /**
-     * Instantiates a new AponWriter.
-     * Pretty printing is enabled by default, and the indent string is
-     * set to "  " (two spaces).
-     * @param writer the character-output stream
+     * Instantiates a new AponWriterCloseable that writes to the specified file using the given charset.
+     * <p>Pretty printing is enabled by default with two-space indentation.</p>
+     * @param file the file to write to
+     * @param charset the charset to use
+     * @throws IOException if an I/O error occurs
+     */
+    public AponWriterCloseable(@NonNull File file, Charset charset) throws IOException {
+        this(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), charset)));
+    }
+
+    /**
+     * Instantiates a new AponWriterCloseable that wraps the given {@link Writer}.
+     * <p>Pretty printing is enabled by default with two-space indentation.</p>
+     * @param writer the character-output stream to wrap
      */
     public AponWriterCloseable(Writer writer) {
         super(writer);

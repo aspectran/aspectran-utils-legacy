@@ -15,12 +15,11 @@
  */
 package com.aspectran.utils.apon;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.util.List;
 
 /**
  * Test cases for converting XML to APON Parameters.
@@ -56,31 +55,31 @@ public class XmlToParametersTest {
 
         Parameters params = XmlToParameters.from(xml);
         Parameters container = params.getParameters("container");
-        assertNotNull(container);
-        assertEquals("12", container.getString("id"));
+        Assert.assertNotNull(container);
+        Assert.assertEquals("12", container.getString("id"));
 
         Parameters item1 = container.getParameters("item1");
-        assertNotNull(item1);
+        Assert.assertNotNull(item1);
 
         // Test array of containers within item1
-        java.util.List<Parameters> containers = item1.getParametersList("container");
-        assertEquals(2, containers.size());
+        List<Parameters> containers = item1.getParametersList("container");
+        Assert.assertEquals(2, containers.size());
 
         // First container in the array
         Parameters container1 = containers.get(0);
-        assertEquals("34", container1.getString("id"));
-        java.util.List<Parameters> items1 = container1.getParametersList("item");
-        assertEquals(2, items1.size());
-        assertEquals("56", items1.get(0).getString("id"));
-        assertEquals("a\na\na", items1.get(0).getString("item"));
-        assertEquals("78", items1.get(1).getString("id"));
-        assertEquals("bbb", items1.get(1).getString("item"));
+        Assert.assertEquals("34", container1.getString("id"));
+        List<Parameters> items1 = container1.getParametersList("item");
+        Assert.assertEquals(2, items1.size());
+        Assert.assertEquals("56", items1.get(0).getString("id"));
+        Assert.assertEquals("a\na\na", items1.get(0).getString("item"));
+        Assert.assertEquals("78", items1.get(1).getString("id"));
+        Assert.assertEquals("bbb", items1.get(1).getString("item"));
 
         // Second container in the array
         Parameters container2 = containers.get(1);
-        java.util.List<String> items2 = container2.getStringList("item");
-        assertEquals(3, items2.size());
-        assertEquals("aaa", items2.get(0));
+        List<String> items2 = container2.getStringList("item");
+        Assert.assertEquals(3, items2.size());
+        Assert.assertEquals("aaa", items2.get(0));
     }
 
     /**
@@ -91,8 +90,8 @@ public class XmlToParametersTest {
         String xml = "<root><key>value</key><number>123</number></root>";
         Parameters params = XmlToParameters.from(xml);
         Parameters root = params.getParameters("root");
-        assertEquals("value", root.getString("key"));
-        assertEquals("123", root.getString("number"));
+        Assert.assertEquals("value", root.getString("key"));
+        Assert.assertEquals("123", root.getString("number"));
     }
 
     /**
@@ -102,9 +101,9 @@ public class XmlToParametersTest {
     public void testXmlWithSiblingElements() throws IOException {
         String xml = "<root><item>a</item><item>b</item><item>c</item></root>";
         Parameters params = XmlToParameters.from(xml);
-        java.util.List<String> items = params.getParameters("root").getStringList("item");
-        assertEquals(3, items.size());
-        assertEquals(java.util.Arrays.asList("a", "b", "c"), items);
+        List<String> items = params.getParameters("root").getStringList("item");
+        Assert.assertEquals(3, items.size());
+        Assert.assertEquals(java.util.Arrays.asList("a", "b", "c"), items);
     }
 
     /**
@@ -114,7 +113,7 @@ public class XmlToParametersTest {
     public void testXmlWithCDataSection() throws IOException {
         String xml = "<root><![CDATA[This is <some> text & characters.]]></root>";
         Parameters params = XmlToParameters.from(xml);
-        assertEquals("This is <some> text & characters.", params.getString("root"));
+        Assert.assertEquals("This is <some> text & characters.", params.getString("root"));
     }
 
     /**
