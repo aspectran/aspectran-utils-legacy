@@ -1144,7 +1144,7 @@ public class JsonReader {
     }
 
     /**
-     * Closes this JSON reader and the underlying {@link java.io.Reader}.
+     * Closes this JSON reader and the underlying {@link Reader}.
      */
     public void close() {
         peeked = PEEKED_NONE;

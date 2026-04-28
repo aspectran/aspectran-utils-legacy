@@ -15,115 +15,118 @@
  */
 package com.aspectran.utils.json;
 
+import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Test cases for JsonParser.
  *
  * <p>Created: 2025-10-15</p>
  */
-@SuppressWarnings("unchecked")
 public class JsonParserTest {
 
     @Test
     public void testParseSimpleObject() throws IOException {
         String json = "{\"name\":\"John Doe\",\"age\":30,\"isStudent\":false}";
         Object result = JsonParser.parse(json);
-        assertTrue(result instanceof Map);
+        Assert.assertTrue(result instanceof Map);
+        @SuppressWarnings("unchecked")
         Map<String, Object> map = (Map<String, Object>)result;
-        assertEquals("John Doe", map.get("name"));
-        assertEquals(30, map.get("age"));
-        assertEquals(false, map.get("isStudent"));
+        Assert.assertEquals("John Doe", map.get("name"));
+        Assert.assertEquals(30, map.get("age"));
+        Assert.assertEquals(false, map.get("isStudent"));
     }
 
     @Test
     public void testParseSimpleArray() throws IOException {
         String json = "[1, \"hello\", true, null]";
         Object result = JsonParser.parse(json);
-        assertTrue(result instanceof List);
+        Assert.assertTrue(result instanceof List);
+        @SuppressWarnings("unchecked")
         List<Object> list = (List<Object>)result;
-        assertEquals(1, list.get(0));
-        assertEquals("hello", list.get(1));
-        assertEquals(true, list.get(2));
-        assertNull(list.get(3));
+        Assert.assertEquals(1, list.get(0));
+        Assert.assertEquals("hello", list.get(1));
+        Assert.assertEquals(true, list.get(2));
+        Assert.assertNull(list.get(3));
     }
 
     @Test
     public void testParseNestedObject() throws IOException {
         String json = "{\"person\":{\"name\":\"Jane Doe\",\"age\":25},\"city\":\"New York\"}";
         Object result = JsonParser.parse(json);
-        assertTrue(result instanceof Map);
+        Assert.assertTrue(result instanceof Map);
+        @SuppressWarnings("unchecked")
         Map<String, Object> map = (Map<String, Object>)result;
-        assertEquals("New York", map.get("city"));
-        assertTrue(map.get("person") instanceof Map);
+        Assert.assertEquals("New York", map.get("city"));
+        Assert.assertTrue(map.get("person") instanceof Map);
+        @SuppressWarnings("unchecked")
         Map<String, Object> personMap = (Map<String, Object>)map.get("person");
-        assertEquals("Jane Doe", personMap.get("name"));
-        assertEquals(25, personMap.get("age"));
+        Assert.assertEquals("Jane Doe", personMap.get("name"));
+        Assert.assertEquals(25, personMap.get("age"));
     }
 
     @Test
     public void testParseNestedArray() throws IOException {
         String json = "{\"data\":[{\"id\":1},{\"id\":2}]}";
         Object result = JsonParser.parse(json);
-        assertTrue(result instanceof Map);
+        Assert.assertTrue(result instanceof Map);
+        @SuppressWarnings("unchecked")
         Map<String, Object> map = (Map<String, Object>)result;
-        assertTrue(map.get("data") instanceof List);
+        Assert.assertTrue(map.get("data") instanceof List);
+        @SuppressWarnings("unchecked")
         List<Object> list = (List<Object>)map.get("data");
-        assertEquals(2, list.size());
-        assertTrue(list.get(0) instanceof Map);
+        Assert.assertEquals(2, list.size());
+        Assert.assertTrue(list.get(0) instanceof Map);
+        @SuppressWarnings("unchecked")
         Map<String, Object> item1 = (Map<String, Object>)list.get(0);
-        assertEquals(1, item1.get("id"));
+        Assert.assertEquals(1, item1.get("id"));
     }
 
     @Test
     public void testParseEmptyObject() throws IOException {
         String json = "{}";
         Object result = JsonParser.parse(json);
-        assertTrue(result instanceof Map);
-        assertTrue(((Map<?, ?>)result).isEmpty());
+        Assert.assertTrue(result instanceof Map);
+        Assert.assertTrue(((Map<?, ?>)result).isEmpty());
     }
 
     @Test
     public void testParseEmptyArray() throws IOException {
         String json = "[]";
         Object result = JsonParser.parse(json);
-        assertTrue(result instanceof List);
-        assertTrue(((List<?>)result).isEmpty());
+        Assert.assertTrue(result instanceof List);
+        Assert.assertTrue(((List<?>)result).isEmpty());
     }
 
     @Test
     public void testParseNullInput() throws IOException {
-        assertNull(JsonParser.parse(null));
+        Assert.assertNull(JsonParser.parse(null));
     }
 
     @Test
     public void testParseNumberTypes() throws IOException {
         String json = "{\"int\":123,\"long\":1234567890123,\"double\":123.45}";
         Object result = JsonParser.parse(json);
-        assertTrue(result instanceof Map);
+        Assert.assertTrue(result instanceof Map);
+        @SuppressWarnings("unchecked")
         Map<String, Object> map = (Map<String, Object>)result;
-        assertEquals(123, map.get("int"));
-        assertEquals(1234567890123L, map.get("long"));
-        assertEquals(123.45, map.get("double"));
+        Assert.assertEquals(123, map.get("int"));
+        Assert.assertEquals(1234567890123L, map.get("long"));
+        Assert.assertEquals(123.45, map.get("double"));
     }
 
     @Test
     public void testWhitespaceHandling() throws IOException {
         String json = "  { \n \"key\" \t : \r \"value\" \n }  ";
         Object result = JsonParser.parse(json);
-        assertTrue(result instanceof Map);
+        Assert.assertTrue(result instanceof Map);
         Map<?, ?> map = (Map<?, ?>)result;
-        assertEquals("value", map.get("key"));
-        assertEquals(1, map.size());
+        Assert.assertEquals("value", map.get("key"));
+        Assert.assertEquals(1, map.size());
     }
 
     @Test
@@ -152,18 +155,18 @@ public class JsonParserTest {
                 "  ]\n" +
                 "}";
         Object result = JsonParser.parse(json);
-        assertTrue(result instanceof Map);
+        Assert.assertTrue(result instanceof Map);
         Map<?, ?> map = (Map<?, ?>) result;
-        assertEquals("001", map.get("id"));
-        assertEquals("donut", map.get("type"));
-        assertTrue(map.get("batters") instanceof Map);
+        Assert.assertEquals("001", map.get("id"));
+        Assert.assertEquals("donut", map.get("type"));
+        Assert.assertTrue(map.get("batters") instanceof Map);
         Map<?, ?> batters = (Map<?, ?>) map.get("batters");
-        assertTrue(batters.get("batter") instanceof List);
+        Assert.assertTrue(batters.get("batter") instanceof List);
         List<?> batterList = (List<?>) batters.get("batter");
-        assertEquals(4, batterList.size());
-        assertTrue(map.get("topping") instanceof List);
+        Assert.assertEquals(4, batterList.size());
+        Assert.assertTrue(map.get("topping") instanceof List);
         List<?> toppingList = (List<?>) map.get("topping");
-        assertEquals(7, toppingList.size());
+        Assert.assertEquals(7, toppingList.size());
     }
 
     @Test(expected = MalformedJsonException.class)
@@ -172,7 +175,7 @@ public class JsonParserTest {
         JsonParser.parse(json);
     }
 
-    @Test(expected = EOFException.class)
+    @Test(expected = java.io.EOFException.class)
     public void testIncompleteJson() throws IOException {
         String json = "{\"name\":\"John Doe\"";
         JsonParser.parse(json);

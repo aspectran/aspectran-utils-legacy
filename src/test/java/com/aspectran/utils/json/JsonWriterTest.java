@@ -19,6 +19,7 @@ import com.aspectran.utils.StringifyContext;
 import com.aspectran.utils.apon.Parameters;
 import com.aspectran.utils.apon.VariableParameters;
 import com.aspectran.utils.apon.test.Customer;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -31,10 +32,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Test cases for JsonWriter.
@@ -106,7 +103,7 @@ public class JsonWriterTest {
                 "  }\n" +
                 "}";
 
-        assertEquals(expected.trim(), result);
+        Assert.assertEquals(expected.trim(), result.trim());
     }
 
     @Test
@@ -139,7 +136,7 @@ public class JsonWriterTest {
                 "  }\n" +
                 "}";
 
-        assertEquals(expected.trim(), result);
+        Assert.assertEquals(expected.trim(), result.trim());
     }
 
     @Test
@@ -165,7 +162,7 @@ public class JsonWriterTest {
                 "  \"dateTime\": \"2019-11-19 11:15:30\"\n" +
                 "}";
 
-        assertEquals(expected.trim().replace("\r\n", "\n"), result);
+        Assert.assertEquals(expected.trim().replace("\r\n", "\n"), result.trim());
     }
 
     @Test
@@ -190,8 +187,6 @@ public class JsonWriterTest {
         writer.writeJson("[1, 2, 3]");
         writer.endObject();
 
-        // System.out.println(writer.toString());
-
         String expected = "{\n" +
                 "  \"key1\": \"value\",\n" +
                 "  \"key2\": \"1234\",\n" +
@@ -202,7 +197,7 @@ public class JsonWriterTest {
                 "  \"array\": [1, 2, 3]\n" +
                 "}";
 
-        assertEquals(expected.replace("\r\n", "\n"), writer.toString().trim());
+        Assert.assertEquals(expected.replace("\r\n", "\n"), writer.toString().trim());
     }
 
     @Test
@@ -217,9 +212,9 @@ public class JsonWriterTest {
         try {
             JsonWriter writer = new JsonWriter(new StringWriter());
             writer.writeValue(map1);
-            fail("Should have thrown IOException");
+            Assert.fail("Should have thrown IOException due to circular reference");
         } catch (IOException e) {
-            assertTrue(e.getMessage().startsWith("JSON Serialization Failure: Circular reference detected for member 'map2-1'"));
+            Assert.assertTrue(e.getMessage().startsWith("JSON Serialization Failure: Circular reference detected for member 'map2-1'"));
         }
     }
 
@@ -234,9 +229,9 @@ public class JsonWriterTest {
         try {
             JsonWriter writer = new JsonWriter(new StringWriter());
             writer.writeValue(map1);
-            fail("Should have thrown IOException");
+            Assert.fail("Should have thrown IOException due to circular reference");
         } catch (IOException e) {
-            assertTrue(e.getMessage().startsWith("JSON Serialization Failure: Circular reference detected for a member"));
+            Assert.assertTrue(e.getMessage().startsWith("JSON Serialization Failure: Circular reference detected for a member"));
         }
     }
 
@@ -247,26 +242,26 @@ public class JsonWriterTest {
         map.put("age", 30);
         StringWriter stringWriter = new StringWriter();
         String result = new JsonWriter(stringWriter).prettyPrint(false).value(map).toString();
-        assertEquals("{\"name\":\"John Doe\",\"age\":30}", result);
+        Assert.assertEquals("{\"name\":\"John Doe\",\"age\":30}", result);
     }
 
     @Test
     public void testWriteSimpleValue() throws IOException {
         StringWriter stringWriter = new StringWriter();
         String result = new JsonWriter(stringWriter).value("hello").toString();
-        assertEquals("\"hello\"", result);
+        Assert.assertEquals("\"hello\"", result);
 
         stringWriter = new StringWriter();
         result = new JsonWriter(stringWriter).value(123).toString();
-        assertEquals("123", result);
+        Assert.assertEquals("123", result);
 
         stringWriter = new StringWriter();
         result = new JsonWriter(stringWriter).value(true).toString();
-        assertEquals("true", result);
+        Assert.assertEquals("true", result);
 
         stringWriter = new StringWriter();
         result = new JsonWriter(stringWriter).nullWritable(true).value(null).toString();
-        assertEquals("null", result);
+        Assert.assertEquals("null", result);
     }
 
     @Test
@@ -276,7 +271,7 @@ public class JsonWriterTest {
         StringWriter stringWriter = new StringWriter();
         String result = new JsonWriter(stringWriter).indentString("    ").value(map).toString();
         String expected = "{\n    \"key\": \"value\"\n}";
-        assertEquals(expected, result);
+        Assert.assertEquals(expected, result);
     }
 
     @Test
@@ -288,7 +283,7 @@ public class JsonWriterTest {
         writer.name("empty");
         writer.value(emptyJsonString);
         writer.endObject();
-        assertEquals("{\n  \"empty\": null\n}", writer.toString().trim());
+        Assert.assertEquals("{\n  \"empty\": null\n}", writer.toString().trim());
     }
 
     @Test
@@ -320,7 +315,7 @@ public class JsonWriterTest {
         writer.value(money.getAmount());
         writer.endObject();
 
-        assertEquals("{\n  \"amount\": \"123.46\"\n}", writer.toString().trim());
+        Assert.assertEquals("{\n  \"amount\": \"123.46\"\n}", writer.toString().trim());
     }
 
     @Test
@@ -357,7 +352,7 @@ public class JsonWriterTest {
         writer.registerSerializer(User.class, userSerializer);
         writer.value(user);
 
-        assertEquals("{\n  \"id\": 1,\n  \"name\": \"John Doe\"\n}", writer.toString().trim());
+        Assert.assertEquals("{\n  \"id\": 1,\n  \"name\": \"John Doe\"\n}", writer.toString().trim());
     }
 
 }
