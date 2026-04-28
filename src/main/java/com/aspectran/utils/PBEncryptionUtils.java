@@ -21,6 +21,7 @@ import org.jasypt.encryption.ByteEncryptor;
 import org.jasypt.encryption.StringEncryptor;
 import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 import org.jasypt.iv.RandomIvGenerator;
+import org.jasypt.salt.StringFixedSaltGenerator;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -30,14 +31,14 @@ import java.util.Arrays;
  * The encryption algorithm and password can be configured via JVM system properties.
  * These properties are read only once when the class is loaded.
  *
- * <p>Note: Use {@code org.jasypt.util.password.StrongPasswordEncryptor} for
+ * <p>Note: Use {@link org.jasypt.util.password.StrongPasswordEncryptor} for
  * high-strength password digesting and checking.</p>
  *
  * <p>Created: 20/10/2018</p>
  *
  * @since 5.3.3
  */
-public abstract class PBEncryptionUtils {
+public class PBEncryptionUtils {
 
     /**
      * The default encryption algorithm is "PBEWithMD5AndTripleDES".
@@ -71,40 +72,88 @@ public abstract class PBEncryptionUtils {
      */
     public static final String ENCRYPTION_PASSWORD_KEY = "aspectran.encryption.password";
 
+    /**
+     * The name of the system property that specifies the encryption salt.
+     */
+    public static final String ENCRYPTION_SALT_KEY = "aspectran.encryption.salt";
+
     private static final Charset MESSAGE_CHARSET = Charset.forName("UTF-8");
 
     private static final Charset ENCRYPTED_MESSAGE_CHARSET = Charset.forName("US-ASCII");
 
-    private static final String algorithm;
-
-    private static final String password;
-
-    private static final StringEncryptor encryptor;
+    private static volatile EncryptionConfig config;
 
     static {
-        algorithm = StringUtils.trimWhitespace(SystemUtils.getProperty(ENCRYPTION_ALGORITHM_KEY, DEFAULT_ALGORITHM));
-        password = StringUtils.trimWhitespace(SystemUtils.getProperty(ENCRYPTION_PASSWORD_KEY));
-        encryptor = (StringUtils.hasText(password) ? getStringEncryptor(password) : null);
+        reload();
+    }
+
+    /**
+     * This class cannot be instantiated.
+     */
+    private PBEncryptionUtils() {
+    }
+
+    /**
+     * Reloads the encryption configuration from the JVM system properties.
+     * This method can be called to apply changes to the encryption settings at runtime.
+     * @since 8.1.0
+     */
+    public static void reload() {
+        config = new EncryptionConfig();
     }
 
     /**
      * Returns the encryption algorithm currently in use.
-     * This value is determined from the "{@value #ENCRYPTION_ALGORITHM_KEY}" system property
-     * at class loading time.
+     * This value is determined from the "{@value #ENCRYPTION_ALGORITHM_KEY}" system property.
      * @return the name of the encryption algorithm
      */
     public static String getAlgorithm() {
-        return algorithm;
+        return config.algorithm;
     }
 
     /**
      * Returns the encryption password currently in use.
-     * This value is determined from the "{@value #ENCRYPTION_PASSWORD_KEY}" system property
-     * at class loading time.
+     * This value is determined from the "{@value #ENCRYPTION_PASSWORD_KEY}" system property.
      * @return the encryption password, or {@code null} if not set
      */
     public static String getPassword() {
-        return password;
+        return config.password;
+    }
+
+    /**
+     * Returns the encryption salt currently in use.
+     * This value is determined from the "{@value #ENCRYPTION_SALT_KEY}" system property.
+     * @return the encryption salt, or {@code null} if not set
+     */
+    public static String getSalt() {
+        return config.salt;
+    }
+
+    /**
+     * Validates the encryption configuration.
+     * <p>This method attempts to initialize an encryptor with the provided parameters
+     * and performs a test encryption to ensure the configuration is valid.
+     * If the salt is too short for the chosen algorithm, an {@link IllegalArgumentException}
+     * will be thrown with a descriptive message.</p>
+     * @param algorithm the encryption algorithm
+     * @param password the encryption password
+     * @param salt the encryption salt (optional)
+     * @throws IllegalArgumentException if the configuration is invalid
+     */
+    public static void validate(String algorithm, String password, String salt) {
+        if (salt != null && salt.length() < 8) {
+            throw new IllegalArgumentException("Encryption salt must be at least 8 characters long");
+        }
+        try {
+            getByteEncryptor(algorithm, password, salt).encrypt(new byte[] { 0 });
+        } catch (Exception e) {
+            String message = "Encryption configuration is invalid: " + e.getMessage();
+            if (e.getMessage() != null && e.getMessage().contains("salt larger than set")) {
+                message = "The provided salt is too short for algorithm " + algorithm +
+                        ". Please provide a longer salt string (at least 8-16 characters).";
+            }
+            throw new IllegalArgumentException(message, e);
+        }
     }
 
     /**
@@ -154,14 +203,41 @@ public abstract class PBEncryptionUtils {
     }
 
     /**
+     * Encrypts the input string using the specified password and salt.
+     * This method creates a temporary encryptor for the operation.
+     * @param inputString the string to encrypt
+     * @param encryptionPassword the password to be used for encryption
+     * @param salt the salt to be used for encryption
+     * @return the result of encryption, as a URL-safe Base64-encoded string
+     * @throws InsufficientEnvironmentException if the provided password is null or empty
+     */
+    public static String encrypt(String inputString, String encryptionPassword, String salt) {
+        return getStringEncryptor(encryptionPassword, salt).encrypt(inputString);
+    }
+
+    /**
+     * Decrypts the input string using the specified password and salt.
+     * This method creates a temporary encryptor for the operation.
+     * @param encryptedString the URL-safe Base64-encoded string to decrypt
+     * @param encryptionPassword the password used for encryption
+     * @param salt the salt used for encryption
+     * @return the result of decryption
+     * @throws InsufficientEnvironmentException if the provided password is null or empty
+     */
+    public static String decrypt(String encryptedString, String encryptionPassword, String salt) {
+        return getStringEncryptor(encryptionPassword, salt).decrypt(encryptedString);
+    }
+
+    /**
      * Returns the default {@link StringEncryptor} instance.
-     * <p>This encryptor is initialized at class loading time using the algorithm and password
+     * <p>This encryptor is initialized from the algorithm and password
      * specified by the "{@value #ENCRYPTION_ALGORITHM_KEY}" and "{@value #ENCRYPTION_PASSWORD_KEY}"
      * system properties.</p>
      * @return the default string encryptor
      * @throws InsufficientEnvironmentException if the encryption password is not set
      */
     public static StringEncryptor getDefaultEncryptor() {
+        StringEncryptor encryptor = config.encryptor;
         if (encryptor == null) {
             checkPassword(null);
         }
@@ -177,7 +253,33 @@ public abstract class PBEncryptionUtils {
      */
     @NonNull
     public static StringEncryptor getStringEncryptor(String encryptionPassword) {
-        return new CustomStringEncryptor(getByteEncryptor(encryptionPassword));
+        return getStringEncryptor(encryptionPassword, null);
+    }
+
+    /**
+     * Creates and returns a new {@link StringEncryptor} instance for the given password and salt.
+     * The algorithm used is the one configured via the system property.
+     * @param encryptionPassword the password to be used for encryption/decryption
+     * @param salt the salt to be used for encryption/decryption
+     * @return a new string encryptor instance
+     * @throws InsufficientEnvironmentException if the provided password is null or empty
+     */
+    @NonNull
+    public static StringEncryptor getStringEncryptor(String encryptionPassword, String salt) {
+        return getStringEncryptor(getAlgorithm(), encryptionPassword, salt);
+    }
+
+    /**
+     * Creates and returns a new {@link StringEncryptor} instance for the given algorithm, password and salt.
+     * @param algorithm the name of the encryption algorithm
+     * @param encryptionPassword the password to be used for encryption/decryption
+     * @param salt the salt to be used for encryption/decryption
+     * @return a new string encryptor instance
+     * @throws InsufficientEnvironmentException if the provided password is null or empty
+     */
+    @NonNull
+    public static StringEncryptor getStringEncryptor(String algorithm, String encryptionPassword, String salt) {
+        return new CustomStringEncryptor(getByteEncryptor(algorithm, encryptionPassword, salt));
     }
 
     /**
@@ -191,10 +293,49 @@ public abstract class PBEncryptionUtils {
      */
     @NonNull
     public static ByteEncryptor getByteEncryptor(String encryptionPassword) {
+        return getByteEncryptor(getAlgorithm(), encryptionPassword, null);
+    }
+
+    /**
+     * Creates and returns a new {@link ByteEncryptor} instance for the given password and salt.
+     * <p>This method configures the underlying {@link StandardPBEByteEncryptor} with the
+     * currently active algorithm. If the algorithm is AES-based, it automatically sets up
+     * an {@link org.jasypt.iv.IvGenerator}.</p>
+     * @param encryptionPassword the password to be used for encryption/decryption
+     * @param salt the salt to be used for encryption/decryption
+     * @return a new byte encryptor instance
+     * @throws InsufficientEnvironmentException if the provided password is null or empty
+     */
+    @NonNull
+    public static ByteEncryptor getByteEncryptor(String encryptionPassword, String salt) {
+        return getByteEncryptor(getAlgorithm(), encryptionPassword, salt);
+    }
+
+    /**
+     * Creates and returns a new {@link ByteEncryptor} instance for the given algorithm, password and salt.
+     * <p>This method configures the underlying {@link StandardPBEByteEncryptor} with the
+     * specified algorithm. If the algorithm is AES-based, it automatically sets up
+     * an {@link org.jasypt.iv.IvGenerator}.</p>
+     * <p><strong>Note on AES and Fixed Salt:</strong> When using AES-based algorithms,
+     * even if a fixed salt is provided, the output will remain non-deterministic (different
+     * each time) because a random Initialization Vector (IV) is still used and included
+     * in the encrypted output. This is a security requirement for AES to prevent patterns
+     * from being recognizable across multiple encrypted messages.</p>
+     * @param algorithm the name of the encryption algorithm
+     * @param encryptionPassword the password to be used for encryption/decryption
+     * @param salt the salt to be used for encryption/decryption
+     * @return a new byte encryptor instance
+     * @throws InsufficientEnvironmentException if the provided password is null or empty
+     */
+    @NonNull
+    public static ByteEncryptor getByteEncryptor(String algorithm, String encryptionPassword, String salt) {
         checkPassword(encryptionPassword);
         StandardPBEByteEncryptor byteEncryptor = new StandardPBEByteEncryptor();
         byteEncryptor.setAlgorithm(algorithm);
         byteEncryptor.setPassword(encryptionPassword);
+        if (StringUtils.hasText(salt)) {
+            byteEncryptor.setSaltGenerator(new StringFixedSaltGenerator(salt));
+        }
         // AES algorithms require an IV (Initialization Vector)
         if (algorithm.contains("AES")) {
             byteEncryptor.setIvGenerator(new RandomIvGenerator());
@@ -208,6 +349,25 @@ public abstract class PBEncryptionUtils {
                     "or decryption; Make sure the JVM system property \"" + ENCRYPTION_PASSWORD_KEY + "\" is set up; " +
                     "(Default algorithm: " + getAlgorithm() + ")");
         }
+    }
+
+    private static final class EncryptionConfig {
+
+        private final String algorithm;
+
+        private final String password;
+
+        private final String salt;
+
+        private final StringEncryptor encryptor;
+
+        private EncryptionConfig() {
+            this.algorithm = StringUtils.trimWhitespace(SystemUtils.getProperty(ENCRYPTION_ALGORITHM_KEY, DEFAULT_ALGORITHM));
+            this.password = StringUtils.trimWhitespace(SystemUtils.getProperty(ENCRYPTION_PASSWORD_KEY));
+            this.salt = StringUtils.trimWhitespace(SystemUtils.getProperty(ENCRYPTION_SALT_KEY));
+            this.encryptor = (StringUtils.hasText(password) ? getStringEncryptor(algorithm, password, salt) : null);
+        }
+
     }
 
     /**
@@ -244,9 +404,7 @@ public abstract class PBEncryptionUtils {
 
         private static final int[] FROM_BASE64_URL = new int[256];
         static {
-            for (int i = 0; i < FROM_BASE64_URL.length; i++) {
-                FROM_BASE64_URL[i] = -1;
-            }
+            Arrays.fill(FROM_BASE64_URL, -1);
             for (int i = 0; i < TO_BASE64_URL.length; i++) {
                 FROM_BASE64_URL[TO_BASE64_URL[i]] = i;
             }
