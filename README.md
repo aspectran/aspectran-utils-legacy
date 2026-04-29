@@ -28,14 +28,14 @@ To use `aspectran-utils-legacy` in your project, add the appropriate dependency 
 <dependency>
     <groupId>com.aspectran</groupId>
     <artifactId>aspectran-utils-legacy</artifactId>
-    <version>1.1.2</version> <!-- Use the actual version -->
+    <version>1.2.0</version> <!-- Use the actual version -->
 </dependency>
 ```
 
 ### Gradle
 
 ```gradle
-implementation 'com.aspectran:aspectran-utils-legacy:1.1.2' // Use the actual version
+implementation 'com.aspectran:aspectran-utils-legacy:1.2.0' // Use the actual version
 ```
 
 For detailed usage examples and environment configuration, please refer to the [Legacy Integration Guide](docs/practical-guide-to-legacy-integration_en.md).
