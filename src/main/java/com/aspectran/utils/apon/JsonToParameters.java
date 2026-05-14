@@ -63,6 +63,14 @@ public class JsonToParameters {
     }
 
     /**
+     * Create a converter that produces a default {@link VariableParameters} container.
+     * @param lenient {@code true} to enable lenient parsing, {@code false} for strict parsing
+     */
+    public JsonToParameters(boolean lenient) {
+        this(null, lenient);
+    }
+
+    /**
      * Create a converter that will instantiate the given {@code requiredType}
      * for the target {@link Parameters} container.
      * @param requiredType the concrete Parameters implementation to instantiate
@@ -303,7 +311,7 @@ public class JsonToParameters {
      */
     @NonNull
     public static Parameters from(String json, boolean lenient) throws IOException {
-        return new JsonToParameters(null, lenient).read(json);
+        return new JsonToParameters(lenient).read(json);
     }
 
     /**
