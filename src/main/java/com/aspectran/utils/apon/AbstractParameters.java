@@ -38,11 +38,13 @@ import java.util.Map;
 
 /**
  * Abstract base class for {@link Parameters} implementations.
- * <p>This class manages the underlying structure of parameters, which can be either
+ * <p>
+ * This class manages the underlying structure of parameters, which can be either
  * fixed (with predefined {@link ParameterKey}s) or variable (where parameters can be
  * added at runtime). It handles the storage of parameter values and their hierarchical
  * relationships (parent/proprietor) but delegates the implementation of type-safe
- * value accessor methods (e.g., {@code getString}, {@code getInt}) to subclasses.</p>
+ * value accessor methods (e.g., {@code getString}, {@code getInt}) to subclasses.
+ * </p>
  *
  * @see DefaultParameters
  * @see VariableParameters
@@ -64,7 +66,7 @@ public abstract class AbstractParameters implements Parameters {
     private AponRenderStyle renderStyle = AponRenderStyle.PRETTY;
 
     /**
-     * Instantiates a new abstract parameters.
+     * Instantiates a new abstract Parameters.
      * @param parameterKeys the parameter keys
      */
     protected AbstractParameters(ParameterKey[] parameterKeys) {
@@ -76,7 +78,11 @@ public abstract class AbstractParameters implements Parameters {
                 pv.setContainer(this);
                 valueMap.put(pk.getName(), pv);
                 if (pk.getAltNames() != null) {
-                    for (String altName : pk.getAltNames()) {
+                    String[] altNames = pk.getAltNames();
+                    if (altNames.length == 1) {
+                        pv.setAltName(altNames[0]);
+                    }
+                    for (String altName : altNames) {
                         altValueMap.put(altName, pv);
                     }
                 }
@@ -93,7 +99,7 @@ public abstract class AbstractParameters implements Parameters {
     }
 
     /**
-     * Instantiates a new abstract parameters.
+     * Instantiates a new abstract Parameters.
      * @param topParameterKeys the top parameter keys
      * @param bottomParameterKeys the bottom parameter keys
      */
@@ -452,82 +458,93 @@ public abstract class AbstractParameters implements Parameters {
         if (value == null && notNullOnly) {
             return;
         }
-        if (value != null && value.getClass().isArray()) {
-            int len = Array.getLength(value);
-            int affected = 0;
-            for (int i = 0; i < len; i++) {
-                Object obj = Array.get(value, i);
-                if (obj != null || !notNullOnly) {
-                    putArrayValue(name, obj);
-                    affected++;
+        Parameter p = getParameter(name);
+        if (value != null) {
+            if (p != null && p.getValueType() == ValueType.OBJECT && !p.isArray()) {
+                putValue(p, name, value);
+                return;
+            }
+            if (value.getClass().isArray()) {
+                int len = Array.getLength(value);
+                int affected = 0;
+                for (int i = 0; i < len; i++) {
+                    Object obj = Array.get(value, i);
+                    if (obj != null || !notNullOnly) {
+                        putArrayValue(name, obj);
+                        affected++;
+                    }
                 }
-            }
-            if (affected == 0 && !notNullOnly) {
-                touchEmptyArrayParameter(name);
-            }
-        } else if (value instanceof Collection) {
-            Collection<?> collection = (Collection<?>)value;
-            int affected = 0;
-            for (Object obj : collection) {
-                if (obj != null || !notNullOnly) {
-                    putArrayValue(name, obj);
-                    affected++;
+                if (affected == 0 && !notNullOnly) {
+                    touchEmptyArrayParameter(name);
                 }
-            }
-            if (affected == 0 && !notNullOnly) {
-                touchEmptyArrayParameter(name);
-            }
-        } else if (value instanceof Iterator) {
-            Iterator<?> iterator = (Iterator<?>)value;
-            int affected = 0;
-            while (iterator.hasNext()) {
-                Object obj = iterator.next();
-                if (obj != null || !notNullOnly) {
-                    putArrayValue(name, obj);
-                    affected++;
+            } else if (value instanceof Collection<?>) {
+                Collection<?> collection = (Collection<?>)value;
+                int affected = 0;
+                for (Object obj : collection) {
+                    if (obj != null || !notNullOnly) {
+                        putArrayValue(name, obj);
+                        affected++;
+                    }
                 }
-            }
-            if (affected == 0 && !notNullOnly) {
-                touchEmptyArrayParameter(name);
-            }
-        } else if (value instanceof Enumeration) {
-            Enumeration<?> enumeration = (Enumeration<?>)value;
-            int affected = 0;
-            while (enumeration.hasMoreElements()) {
-                Object obj = enumeration.nextElement();
-                if (obj != null || !notNullOnly) {
-                    putArrayValue(name, obj);
-                    affected++;
+                if (affected == 0 && !notNullOnly) {
+                    touchEmptyArrayParameter(name);
                 }
-            }
-            if (affected == 0 && !notNullOnly) {
-                touchEmptyArrayParameter(name);
-            }
-        } else if (value instanceof Map) {
-            Map<?, ?> map = (Map<?, ?>)value;
-            int affected = 0;
-            Parameters ps = touchParameters(name);
-            for (Map.Entry<?, ?> entry : map.entrySet()) {
-                Object obj = entry.getValue();
-                if (obj != null || !notNullOnly) {
-                    ps.putValue(entry.getKey().toString(), obj);
-                    affected++;
+            } else if (value instanceof Iterator<?>) {
+                Iterator<?> iterator = (Iterator<?>)value;
+                int affected = 0;
+                while (iterator.hasNext()) {
+                    Object obj = iterator.next();
+                    if (obj != null || !notNullOnly) {
+                        putArrayValue(name, obj);
+                        affected++;
+                    }
                 }
-            }
-            if (affected == 0) {
-                if (notNullOnly) {
-                    removeValue(name);
-                } else {
-                    putValue(name, null, false);
+                if (affected == 0 && !notNullOnly) {
+                    touchEmptyArrayParameter(name);
                 }
+            } else if (value instanceof Enumeration<?>) {
+                Enumeration<?> enumeration = (Enumeration<?>)value;
+                int affected = 0;
+                while (enumeration.hasMoreElements()) {
+                    Object obj = enumeration.nextElement();
+                    if (obj != null || !notNullOnly) {
+                        putArrayValue(name, obj);
+                        affected++;
+                    }
+                }
+                if (affected == 0 && !notNullOnly) {
+                    touchEmptyArrayParameter(name);
+                }
+            } else if (value instanceof Map<?, ?>) {
+                Map<?, ?> map = (Map<?, ?>)value;
+                int affected = 0;
+                Parameters ps = touchParameters(name);
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    Object obj = entry.getValue();
+                    if (obj != null || !notNullOnly) {
+                        ps.putValue(entry.getKey().toString(), obj);
+                        affected++;
+                    }
+                }
+                if (affected == 0) {
+                    if (notNullOnly) {
+                        removeValue(name);
+                    } else {
+                        putValue(name, null, false);
+                    }
+                }
+            } else {
+                if (p == null) {
+                    ValueType valueType = ValueType.resolveFrom(value);
+                    p = attachParameterValue(name, valueType);
+                }
+                putValue(p, name, value);
             }
         } else {
-            Parameter p = getParameter(name);
             if (p == null) {
-                ValueType valueType = ValueType.resolveFrom(value);
-                p = attachParameterValue(name, valueType);
+                p = attachParameterValue(name, ValueType.VARIABLE);
             }
-            putValue(p, name, value);
+            putValue(p, name, null);
         }
     }
 
@@ -648,7 +665,7 @@ public abstract class AbstractParameters implements Parameters {
 
     @Override
     public String toString() {
-        return toString(true);
+        return toString(false);
     }
 
     @Override
@@ -667,9 +684,13 @@ public abstract class AbstractParameters implements Parameters {
         Assert.notNull(key, "key must not be null");
     }
 
-    protected void checkArrayType(Parameter parameter) {
-        if (structureFixed && !parameter.isArray()) {
-            throw new IllegalArgumentException("Not an array type parameter: " + parameter);
+    protected void checkArrayType(@NonNull Parameter parameter) {
+        if (!parameter.isArray()) {
+            if (parameter.getValueType() == ValueType.VARIABLE) {
+                parameter.arraylize();
+            } else if (structureFixed) {
+                throw new IllegalArgumentException("Not an array type parameter: " + parameter);
+            }
         }
     }
 

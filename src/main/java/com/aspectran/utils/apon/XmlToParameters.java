@@ -39,9 +39,9 @@ import java.io.StringReader;
  * Utility that converts XML into {@link Parameters} using a SAX parser.
  * <p>
  * Accepts input from {@link String}, {@link Reader}, {@link InputStream},
- * {@link File}, or {@link InputSource}. Elements become parameters,
+ * {@link File}, or {@link org.xml.sax.InputSource}. Elements become parameters,
  * attributes are captured as nested parameters, and element nesting produces
- * hierarchical parameter groups. An optional {@link EntityResolver}
+ * hierarchical parameter groups. An optional {@link org.xml.sax.EntityResolver}
  * may be supplied.
  * </p>
  *
@@ -254,8 +254,7 @@ public class XmlToParameters {
         String location;
         if (valueHandler != null && valueHandler.getLocator() != null) {
             Locator locator = valueHandler.getLocator();
-            location = "Line Number " + locator.getLineNumber() +
-                ", Column " + locator.getColumnNumber();
+            location = "Line Number " + locator.getLineNumber() + ", Column " + locator.getColumnNumber();
             if (locator.getSystemId() != null) {
                 location = "; " + locator.getSystemId() + " " + location;
             } else {
