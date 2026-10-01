@@ -16,6 +16,7 @@
 package com.aspectran.utils;
 
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -120,6 +124,141 @@ public class MethodUtilsTest {
 
         boolean result2 = TypeUtils.isAssignable(paramTypes2, paramTypes1);
         assertTrue(result2);
+    }
+
+    @Test
+    public void testInvokeStaticMethodWithNull() throws Exception {
+        Object result = MethodUtils.invokeStaticMethod(MethodUtilsTestBean.class, "staticEcho", new Object[] { null });
+        assertNull(result);
+
+        Object result2 = MethodUtils.invokeStaticMethod(MethodUtilsTestBean.class, "staticEcho", new Object[] { "hello" });
+        assertEquals("hello", result2);
+    }
+
+    @Test
+    public void testInvokeSetterAndGetter() throws Exception {
+        MethodUtilsTestBean bean = new MethodUtilsTestBean();
+        MethodUtils.invokeSetter(bean, "sampleName", "Aspectran");
+        Object value = MethodUtils.invokeGetter(bean, "sampleName");
+        assertEquals("Aspectran", value);
+
+        MethodUtils.invokeSetter(bean, "setSampleName", "Aspectran2");
+        Object value2 = MethodUtils.invokeGetter(bean, "getSampleName");
+        assertEquals("Aspectran2", value2);
+    }
+
+    @Test
+    public void testInvokeNestedSetterAndGetter() throws Exception {
+        MethodUtilsTestBean root = new MethodUtilsTestBean();
+        MethodUtilsTestBean nested = new MethodUtilsTestBean();
+        root.setNestedBean(nested);
+
+        MethodUtils.invokeSetter(root, "nestedBean.sampleName", "NestedValue");
+        Object value = MethodUtils.invokeGetter(root, "nestedBean.sampleName");
+        assertEquals("NestedValue", value);
+    }
+
+    @Test
+    public void testInvokeBooleanGetter() throws Exception {
+        MethodUtilsTestBean bean = new MethodUtilsTestBean();
+        bean.setActive(true);
+
+        Object value1 = MethodUtils.invokeGetter(bean, "active");
+        assertEquals(Boolean.TRUE, value1);
+
+        Object value2 = MethodUtils.invokeGetter(bean, "isActive");
+        assertEquals(Boolean.TRUE, value2);
+    }
+
+    @Test
+    public void testInvokeMethodOverloading() throws Exception {
+        MethodUtilsTestBean bean = new MethodUtilsTestBean();
+
+        // Specific String overload preferred
+        Object res1 = MethodUtils.invokeMethod(bean, "echo", "text");
+        assertEquals("String:text", res1);
+
+        // Specific Integer overload preferred
+        Object res2 = MethodUtils.invokeMethod(bean, "echo", 123);
+        assertEquals("Integer:123", res2);
+
+        // Fallback to Object overload
+        Object res3 = MethodUtils.invokeMethod(bean, "echo", new Object());
+        assertTrue(res3.toString().startsWith("Object:"));
+    }
+
+    @Test
+    public void testInvokeExactMethod() throws Exception {
+        MethodUtilsTestBean bean = new MethodUtilsTestBean();
+
+        Object res = MethodUtils.invokeExactMethod(bean, "echo", new Object[] { "exact" }, new Class<?>[] { String.class });
+        assertEquals("String:exact", res);
+
+        // Exact match with Object.class should invoke echo(Object)
+        Object resObj = MethodUtils.invokeExactMethod(bean, "echo", new Object[] { "exact" }, new Class<?>[] { Object.class });
+        assertEquals("Object:exact", resObj);
+    }
+
+    @Test
+    public void testInvokeStaticMethodVariants() throws Exception {
+        Object res1 = MethodUtils.invokeStaticMethod(MethodUtilsTestBean.class, "staticNoArg");
+        assertEquals("staticNoArg", res1);
+
+        Object res2 = MethodUtils.invokeExactStaticMethod(MethodUtilsTestBean.class, "staticNoArg");
+        assertEquals("staticNoArg", res2);
+
+        Object res3 = MethodUtils.invokeExactStaticMethod(MethodUtilsTestBean.class, "staticOverload", new Object[] { "test" }, new Class<?>[] { String.class });
+        assertEquals("String:test", res3);
+    }
+
+    @Test
+    public void testGetAccessibleMethodWithNullParamTypes() {
+        Method method = MethodUtils.getAccessibleMethod(MethodUtilsTestBean.class, "primitiveArray", new Class<?>[] { null });
+        assertNull(method);
+    }
+
+    @Test
+    public void testExceptions() {
+        final MethodUtilsTestBean bean = new MethodUtilsTestBean();
+
+        // Empty setter/getter name
+        assertThrows(IllegalArgumentException.class, new ThrowingRunnable() {
+            @Override
+            public void run() throws Throwable {
+                MethodUtils.invokeSetter(bean, "", "value");
+            }
+        });
+        assertThrows(IllegalArgumentException.class, new ThrowingRunnable() {
+            @Override
+            public void run() throws Throwable {
+                MethodUtils.invokeGetter(bean, "");
+            }
+        });
+
+        // Non-existent method
+        assertThrows(NoSuchMethodException.class, new ThrowingRunnable() {
+            @Override
+            public void run() throws Throwable {
+                MethodUtils.invokeMethod(bean, "nonExistentMethod");
+            }
+        });
+        assertThrows(NoSuchMethodException.class, new ThrowingRunnable() {
+            @Override
+            public void run() throws Throwable {
+                MethodUtils.invokeStaticMethod(MethodUtilsTestBean.class, "nonExistentStaticMethod");
+            }
+        });
+    }
+
+    @Test
+    public void testClearCache() {
+        MethodUtilsTestBean bean = new MethodUtilsTestBean();
+        try {
+            MethodUtils.invokeMethod(bean, "countTo10");
+        } catch (Exception ignored) {
+        }
+        int cleared = MethodUtils.clearCache();
+        assertTrue(cleared > 0);
     }
 
 }
